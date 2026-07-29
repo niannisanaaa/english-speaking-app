@@ -432,30 +432,29 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
                 <div className="ripple-wave wave-3"></div>
               </div>
 
-              {/* Sporadic Stars Encircling the Microphone */}
-              <div className="starburst-burst-container">
-                <Sparkles className="starburst-star star-1" size={20} color="#fbbf24" />
-
-                {audioVolume > 8 && (
+              {/* Sporadic Stars Encircling the Microphone (ONLY APPEAR WHEN VOICE IS DETECTED) */}
+              {audioVolume > 8 && (
+                <div className="starburst-burst-container">
+                  <Sparkles className="starburst-star star-1" size={20} color="#fbbf24" />
                   <Sparkles className="starburst-star star-2" size={24} color="#38bdf8" />
-                )}
 
-                {audioVolume > 18 && (
-                  <>
-                    <Sparkles className="starburst-star star-3" size={22} color="#f472b6" />
-                    <Sparkles className="starburst-star star-4" size={26} color="#fbbf24" />
-                  </>
-                )}
+                  {audioVolume > 18 && (
+                    <>
+                      <Sparkles className="starburst-star star-3" size={22} color="#f472b6" />
+                      <Sparkles className="starburst-star star-4" size={26} color="#fbbf24" />
+                    </>
+                  )}
 
-                {audioVolume > 28 && (
-                  <>
-                    <Sparkles className="starburst-star star-5" size={28} color="#a855f7" />
-                    <Sparkles className="starburst-star star-6" size={24} color="#34d399" />
-                    <Sparkles className="starburst-star star-7" size={30} color="#fbbf24" />
-                    <Sparkles className="starburst-star star-8" size={22} color="#38bdf8" />
-                  </>
-                )}
-              </div>
+                  {audioVolume > 28 && (
+                    <>
+                      <Sparkles className="starburst-star star-5" size={28} color="#a855f7" />
+                      <Sparkles className="starburst-star star-6" size={24} color="#34d399" />
+                      <Sparkles className="starburst-star star-7" size={30} color="#fbbf24" />
+                      <Sparkles className="starburst-star star-8" size={22} color="#38bdf8" />
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* Live Spoken Transcript Feedback */}
               {spokenText && (

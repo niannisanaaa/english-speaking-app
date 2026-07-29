@@ -42,19 +42,22 @@
   margin-top: 10px;
 }
 
-/* Individual 3D Quiz Card (Sesuai Referensi Gambar Screenshot) */
+/* Individual 3D Quiz Card (Menggunakan Card.svg background) */
 .quiz-card-item {
-  width: 140px;
-  height: 140px;
+  width: 135px;
+  height: 135px;
   border-radius: 28px;
-  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 50%, #fed7aa 100%);
-  border: 4px solid #ffffff;
+  background-image: url('/images/Card.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 3.5px solid #ffffff;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.9);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 10px 10px 10px;
+  padding: 10px 8px 8px 8px;
   cursor: pointer;
   position: relative;
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
@@ -67,10 +70,10 @@
   border-color: #fbbf24;
 }
 
-/* Top Subtle Pill Badge on Card (Sesuai Referensi Screenshot) */
+/* Top Subtle Pill Badge on Card */
 .card-top-badge {
-  width: 50px;
-  height: 8px;
+  width: 45px;
+  height: 7px;
   border-radius: 999px;
   background: rgba(251, 146, 60, 0.35);
   margin-top: 2px;
@@ -79,15 +82,15 @@
 /* 3D Character Image Inside Card */
 .card-image-wrapper {
   width: 100%;
-  height: 105px;
+  height: 98px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .card-3d-img {
-  max-width: 95%;
-  max-height: 95%;
+  max-width: 92%;
+  max-height: 92%;
   object-fit: contain;
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
   transition: transform 0.25s ease;
@@ -178,18 +181,35 @@
   80% { transform: translateX(8px) rotate(3deg); }
 }
 
-/* Responsive Scaling for Mobile Screens */
-@media (max-width: 768px) {
+/* Responsive Scaling for Tablet & Mobile Screens (Prevent covering Miss Sophie) */
+@media (max-width: 1024px) {
   .quiz-cards-container {
-    gap: 10px;
+    gap: 12px;
+    margin-top: 40px;
   }
   .quiz-card-item {
-    width: 105px;
-    height: 105px;
-    border-radius: 20px;
+    width: 110px;
+    height: 110px;
+    border-radius: 22px;
     padding: 8px 6px 6px 6px;
   }
   .card-image-wrapper {
     height: 80px;
+  }
+}
+
+@media (max-width: 768px) {
+  .quiz-cards-container {
+    gap: 8px;
+    margin-top: 60px;
+  }
+  .quiz-card-item {
+    width: 95px;
+    height: 95px;
+    border-radius: 18px;
+    padding: 6px 4px 4px 4px;
+  }
+  .card-image-wrapper {
+    height: 70px;
   }
 }
