@@ -1,0 +1,516 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight, Mic, MicOff, Sparkles, CheckCircle2, Volume2, RotateCcw } from 'lucide-react';
+import { playSuccessChime, playTapChime } from '../utils/soundEffects';
+import './Scene2InteractiveZoo.css';
+
+export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevScene, hasPrevScene, hasNextScene }) {
+  const [currentAnimalId, setCurrentAnimalId] = useState('lion');
+  const [visitedAnimals, setVisitedAnimals] = useState([]);
+  const [mode, setMode] = useState('guided_flow'); // 'guided_flow' | 'choice_prompt' | 'free_choice'
+  const [stepIndex, setStepIndex] = useState(0);
+  const [showCoachmark, setShowCoachmark] = useState(false);
+  
+  // Speech Recognition States
+  const [isListening, setIsListening] = useState(false);
+  const [spokenText, setSpokenText] = useState('');
+  const [speechSuccess, setSpeechSuccess] = useState(false);
+  const [micSupported, setMicSupported] = useState(true);
+
+  const videoRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  const activeAnimal = sceneData.animals[currentAnimalId] || sceneData.animals.lion;
+  const currentStep = activeAnimal.steps[stepIndex] || activeAnimal.steps[0];
+
+  // Dynamic Video Source Resolution
+  const getVideoSrc = () => {
+    if (mode === 'choice_prompt') {
+      return '/Videos/scene_02_choice_next_animal.mp4';
+    }
+    if (mode === 'free_choice') {
+      return '/Videos/scene_02_lion_03_hotspot_loop.mp4';
+    }
+    return `/Videos/${currentStep.name}`;
+  };
+
+  const videoSrc = getVideoSrc();
+
+  // Reset states when step, animal, or mode changes
+  useEffect(() => {
+    setShowCoachmark(false);
+    setSpokenText('');
+    setSpeechSuccess(false);
+
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {});
+    }
+
+    // Step 3 or Free Choice Hotspot Timer (5 Seconds)
+    let coachmarkTimer;
+    if (mode === 'free_choice' || (mode === 'guided_flow' && currentStep.isHotspotStep)) {
+      coachmarkTimer = setTimeout(() => {
+        setShowCoachmark(true);
+      }, 5000);
+    }
+
+    // Step 7 Speech Recognition Trigger
+    if (mode === 'guided_flow' && currentStep.isSpeechStep) {
+      startSpeechRecognition();
+    } else {
+      stopSpeechRecognition();
+    }
+
+    return () => {
+      if (coachmarkTimer) clearTimeout(coachmarkTimer);
+      stopSpeechRecognition();
+    };
+  }, [stepIndex, currentAnimalId, mode]);
+
+  const [audioVolume, setAudioVolume] = useState(0);
+  const audioCtxRef = useRef(null);
+  const animFrameRef = useRef(null);
+  const micStreamRef = useRef(null);
+
+  // Web Speech API & Real-time Audio Analyzer Initialization
+  const startSpeechRecognition = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    // Start Web Audio API Analyzer for real-time reactive pulse
+    if (navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        micStreamRef.current = stream;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        audioCtxRef.current = audioCtx;
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64;
+        const source = audioCtx.createMediaStreamSource(stream);
+        source.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const analyze = () => {
+          analyser.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i];
+          }
+          const avg = sum / dataArray.length;
+          setAudioVolume(avg);
+          animFrameRef.current = requestAnimationFrame(analyze);
+        };
+        analyze();
+      }).catch(() => {});
+    }
+
+    if (!SpeechRecognition) {
+      setMicSupported(false);
+      return;
+    }
+
+    setMicSupported(true);
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        const rawTranscript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join(' ')
+          .toLowerCase();
+
+        setSpokenText(rawTranscript);
+
+        const cleanText = rawTranscript.replace(/[^a-z0-9\s]/g, '').trim();
+        const words = cleanText.split(/\s+/);
+
+        const targetWord = (currentStep.targetWord || activeAnimal.targetWord || activeAnimal.id || '').toLowerCase();
+        const isGiraffeMode = currentAnimalId === 'giraffe' || targetWord === 'giraffe';
+
+        let isMatch = false;
+
+        if (isGiraffeMode) {
+          isMatch = 
+            cleanText.includes('giraffe') ||
+            cleanText.includes('giraf') ||
+            cleanText.includes('geraf') ||
+            cleanText.includes('jiraf') ||
+            cleanText.includes('jerapah') ||
+            cleanText.includes('zeraf') ||
+            cleanText.includes('juraf') ||
+            cleanText.includes('graf') ||
+            cleanText.includes('draft') ||
+            cleanText.includes('draf') ||
+            cleanText.includes('craft') ||
+            cleanText.includes('graph') ||
+            cleanText.includes('half') ||
+            words.some(w => 
+              w.startsWith('gi') || 
+              w.startsWith('ji') || 
+              w.startsWith('je') || 
+              w.startsWith('ge') ||
+              w.startsWith('gra') ||
+              w.startsWith('dra') ||
+              w.includes('raf') ||
+              w.includes('ffe') ||
+              w.includes('rapah')
+            );
+        } else {
+          isMatch = 
+            cleanText.includes('lion') ||
+            cleanText.includes('lyon') ||
+            cleanText.includes('laion') ||
+            cleanText.includes('line') ||
+            cleanText.includes('ryan') ||
+            cleanText.includes('iron') ||
+            cleanText.includes('lying') ||
+            cleanText.includes('liom') ||
+            cleanText.includes('lian') ||
+            words.some(w => w.startsWith('li') && w.length >= 3);
+        }
+
+        if (isMatch) {
+          handleSpeechSuccess();
+        }
+      };
+
+      recognition.onerror = (err) => {
+        console.warn('Speech recognition error:', err);
+      };
+
+      recognition.onend = () => {
+        if (mode === 'guided_flow' && currentStep.isSpeechStep && !speechSuccess) {
+          try { recognition.start(); } catch (e) {}
+        }
+      };
+
+      recognition.start();
+      recognitionRef.current = recognition;
+      setIsListening(true);
+    } catch (e) {
+      console.warn('Speech recognition start failed:', e);
+    }
+  };
+
+  const stopSpeechRecognition = () => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) {}
+      recognitionRef.current = null;
+    }
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    if (audioCtxRef.current) {
+      try { audioCtxRef.current.close(); } catch (e) {}
+      audioCtxRef.current = null;
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach(track => track.stop());
+      micStreamRef.current = null;
+    }
+    setIsListening(false);
+    setAudioVolume(0);
+  };
+
+  const handleSpeechSuccess = () => {
+    playSuccessChime();
+    setSpeechSuccess(true);
+    stopSpeechRecognition();
+
+    // Transition to Speech Success Video (Last step of current animal)
+    const successStepIdx = activeAnimal.steps.findIndex(s => s.id === 'speech_success');
+    setTimeout(() => {
+      if (successStepIdx !== -1) {
+        setStepIndex(successStepIdx);
+      }
+    }, 600);
+  };
+
+  const handleVideoEnd = () => {
+    // 1. Teacher Choice Prompt Video Ended -> Switch to Free Choice Overview Loop
+    if (mode === 'choice_prompt') {
+      setMode('free_choice');
+      return;
+    }
+
+    // 2. Free Choice Overview Video Loop -> Keep Looping
+    if (mode === 'free_choice') {
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+        videoRef.current.play().catch(() => {});
+      }
+      return;
+    }
+
+    // 3. Guided Flow Step Video Loop -> Keep Looping
+    if (mode === 'guided_flow' && currentStep.isLoop) {
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+        videoRef.current.play().catch(() => {});
+      }
+      return;
+    }
+
+    // 4. Guided Flow Normal Video Ended -> Advance to Next Step or Complete Animal
+    if (stepIndex < activeAnimal.steps.length - 1) {
+      setStepIndex(prev => prev + 1);
+    } else {
+      // Animal Sub-flow Completed!
+      const newVisited = Array.from(new Set([...visitedAnimals, currentAnimalId]));
+      setVisitedAnimals(newVisited);
+
+      const allAvailableAnimals = Object.keys(sceneData.animals);
+      const isAllDone = allAvailableAnimals.every(anKey => newVisited.includes(anKey));
+
+      if (isAllDone) {
+        // All available animals discovered -> Auto-advance to Scene 3!
+        setTimeout(() => {
+          if (onNextScene) onNextScene();
+        }, 600);
+      } else {
+        // Return to Teacher Choice Prompt ("Which animal next?")
+        setTimeout(() => {
+          setMode('choice_prompt');
+        }, 400);
+      }
+    }
+  };
+
+  const handleHotspotClick = (animalId) => {
+    playTapChime();
+    playSuccessChime();
+
+    if (mode === 'free_choice') {
+      setCurrentAnimalId(animalId);
+      setStepIndex(0);
+      setMode('guided_flow');
+    } else if (mode === 'guided_flow' && currentStep.isHotspotStep) {
+      setStepIndex(prev => prev + 1);
+    }
+  };
+
+  const handleRestartFlow = () => {
+    setStepIndex(0);
+    setMode('guided_flow');
+  };
+
+  const unvisitedAnimalKeys = Object.keys(sceneData.animals).filter(key => !visitedAnimals.includes(key));
+  const recommendedAnimalKey = unvisitedAnimalKeys[0] || 'giraffe';
+
+  return (
+    <div className="scene2-wrapper">
+      {/* Top Header Navigation */}
+      <header className="scene2-header glass-panel">
+        <div className="header-info">
+          <div className="badge-pill">
+            <Sparkles size={16} color="var(--accent-gold)" />
+            <span>Scene 2: Find & Learn Animals</span>
+          </div>
+          <h1 className="scene-title">
+            {mode === 'choice_prompt' && '❓ Milo & Teacher: Which animal next?'}
+            {mode === 'free_choice' && '🌿 Zoo Overview: Tap any animal!'}
+            {mode === 'guided_flow' && `${activeAnimal.displayName === 'Lion' ? '🦁' : '🦒'} Mission: ${activeAnimal.displayName} Discovery`}
+          </h1>
+        </div>
+
+        <div className="top-nav-controls">
+          <button className="nav-arrow-btn" onClick={onPrevScene} disabled={!hasPrevScene} title="Previous Scene">
+            <ChevronLeft size={22} />
+          </button>
+          
+          <div className="step-indicator">
+            {mode === 'guided_flow' 
+              ? `Step ${stepIndex + 1} of ${activeAnimal.steps.length}`
+              : `Discovered: ${visitedAnimals.length} of ${Object.keys(sceneData.animals).length}`}
+          </div>
+
+          <button className="nav-arrow-btn highlight-arrow" onClick={onNextScene} disabled={!hasNextScene} title="Next Scene">
+            <ChevronRight size={22} />
+          </button>
+        </div>
+      </header>
+
+      {/* Main Video Canvas Area */}
+      <div className="video-aspect-container glass-panel">
+        <video
+          ref={videoRef}
+          src={videoSrc}
+          className="main-video-player"
+          onEnded={handleVideoEnd}
+          playsInline
+          autoPlay
+        />
+
+        {/* FREE CHOICE OVERVIEW HOTSPOTS OVERLAY */}
+        {mode === 'free_choice' && (
+          <>
+            {Object.keys(sceneData.animals).map(animalKey => {
+              const animal = sceneData.animals[animalKey];
+              const isVisited = visitedAnimals.includes(animalKey);
+              const isRecommended = showCoachmark && animalKey === recommendedAnimalKey;
+
+              // Do NOT render any rings or badges for already visited animals!
+              if (isVisited) return null;
+
+              return (
+                <div
+                  key={animalKey}
+                  className={`animal-hotspot-zone ${isRecommended ? 'coachmark-active' : ''}`}
+                  style={{
+                    top: animal.hotspot.top,
+                    left: animal.hotspot.left,
+                    width: animal.hotspot.width,
+                    height: animal.hotspot.height
+                  }}
+                  onClick={() => handleHotspotClick(animalKey)}
+                  title={`Tap to discover ${animal.displayName}!`}
+                >
+                  {/* Yellow Coachmark Ring ONLY renders when recommended after 5s idle */}
+                  {isRecommended && (
+                    <div className="pulsating-ring-container">
+                      <svg className="pulsating-ring-svg" viewBox="0 0 100 100">
+                        <circle className="ring-pulse-outer" cx="50" cy="50" r="42" />
+                        <circle className="ring-pulse-inner" cx="50" cy="50" r="42" />
+                      </svg>
+                      <div className="coachmark-label-badge">
+                        <span>Tap {animal.displayName}! {animalKey === 'giraffe' ? '🦒' : '🦁'}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
+
+        {/* GUIDED FLOW STEP 3 HOTSPOT OVERLAY */}
+        {mode === 'guided_flow' && currentStep.isHotspotStep && (
+          <div 
+            className={`lion-hotspot-zone ${showCoachmark ? 'coachmark-active' : ''}`}
+            style={{
+              top: activeAnimal.hotspot.top,
+              left: activeAnimal.hotspot.left,
+              width: activeAnimal.hotspot.width,
+              height: activeAnimal.hotspot.height
+            }}
+            onClick={() => handleHotspotClick(currentAnimalId)}
+            title={`Tap on ${activeAnimal.displayName}!`}
+          >
+            {/* Pulsating Yellow Ring SVG Overlay */}
+            <div className="pulsating-ring-container">
+              <svg className="pulsating-ring-svg" viewBox="0 0 100 100">
+                <circle className="ring-pulse-outer" cx="50" cy="50" r="42" />
+                <circle className="ring-pulse-inner" cx="50" cy="50" r="42" />
+              </svg>
+              {showCoachmark && (
+                <div className="coachmark-label-badge">
+                  <span>Tap {activeAnimal.displayName}! {currentAnimalId === 'giraffe' ? '🦒' : '🦁'}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 7: DYNAMIC VOLUME-REACTIVE 3D MICROPHONE OVERLAY */}
+        {mode === 'guided_flow' && currentStep.isSpeechStep && (
+          <div className="mic-3d-speech-overlay">
+            <div className="mic-3d-widget">
+              {/* Sonic Water-Ripples ALWAYS PRESENT */}
+              <div 
+                className={`sonic-ripple-container ${audioVolume > 8 ? 'active-voice' : 'idle-voice'}`}
+                style={{
+                  transform: `translate(-50%, -50%) scale(${1 + Math.min(Math.max(audioVolume - 8, 0) / 25, 0.85)})`,
+                  opacity: audioVolume > 8 ? Math.min(0.6 + audioVolume / 50, 0.95) : 0.45
+                }}
+              >
+                <div className="ripple-wave wave-1"></div>
+                <div className="ripple-wave wave-2"></div>
+                <div className="ripple-wave wave-3"></div>
+              </div>
+
+              {/* Sporadic Stars Encircling the Microphone */}
+              <div className="starburst-burst-container">
+                <Sparkles className="starburst-star star-1" size={20} color="#fbbf24" />
+
+                {audioVolume > 8 && (
+                  <Sparkles className="starburst-star star-2" size={24} color="#38bdf8" />
+                )}
+
+                {audioVolume > 18 && (
+                  <>
+                    <Sparkles className="starburst-star star-3" size={22} color="#f472b6" />
+                    <Sparkles className="starburst-star star-4" size={26} color="#fbbf24" />
+                  </>
+                )}
+
+                {audioVolume > 28 && (
+                  <>
+                    <Sparkles className="starburst-star star-5" size={28} color="#a855f7" />
+                    <Sparkles className="starburst-star star-6" size={24} color="#34d399" />
+                    <Sparkles className="starburst-star star-7" size={30} color="#fbbf24" />
+                    <Sparkles className="starburst-star star-8" size={22} color="#38bdf8" />
+                  </>
+                )}
+              </div>
+
+              {/* Live Spoken Transcript Feedback */}
+              {spokenText && (
+                <div className="mic-live-spoken-tag glass-panel">
+                  Hearing: "{spokenText}"
+                </div>
+              )}
+
+              {/* Clean 3D Purple Microphone Asset */}
+              <div 
+                className="mic-3d-img-wrapper" 
+                onClick={handleSpeechSuccess}
+                title={`Tap mic to test match (${activeAnimal.targetWord})`}
+              >
+                <img src="/images/mic_3d.png" alt="Microphone" className="mic-3d-img" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom Status Control Overlay */}
+        <div className="video-overlay-layer">
+          <div className="step-progress-row">
+            {activeAnimal.steps.map((st, idx) => (
+              <div 
+                key={st.id} 
+                className={`step-dot ${idx === stepIndex ? 'current' : idx < stepIndex ? 'done' : ''}`}
+                onClick={() => { setMode('guided_flow'); setStepIndex(idx); }}
+                title={st.title}
+              />
+            ))}
+          </div>
+
+          <div className="overlay-bottom-bar">
+            <div className="video-title-tag">
+              <span className="part-number">{mode === 'guided_flow' ? currentStep.title : 'Free Zoo Exploration'}</span>
+            </div>
+
+            <div className="player-buttons">
+              <button className="control-btn" onClick={handleRestartFlow} title="Restart Scene">
+                <RotateCcw size={20} />
+              </button>
+
+              {mode === 'guided_flow' && stepIndex < activeAnimal.steps.length - 1 ? (
+                <button className="action-pill-btn" onClick={() => setStepIndex(prev => prev + 1)}>
+                  Skip Step <ChevronRight size={18} />
+                </button>
+              ) : (
+                <button className="action-pill-btn finish-scene-btn" onClick={onNextScene}>
+                  Next Scene <Sparkles size={18} />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
