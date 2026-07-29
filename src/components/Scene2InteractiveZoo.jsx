@@ -42,6 +42,8 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
     setSpeechSuccess(false);
 
     if (videoRef.current) {
+      // MUTE video audio during speech practice step so mic doesn't pick up video audio!
+      videoRef.current.muted = (mode === 'guided_flow' && currentStep.isSpeechStep);
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {});
     }
@@ -146,13 +148,17 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
             cleanText.includes('craft') ||
             cleanText.includes('graph') ||
             cleanText.includes('half') ||
+            cleanText.includes('raf') ||
+            cleanText.includes('jerap') ||
+            cleanText.includes('jrap') ||
             words.some(w => 
               w.startsWith('gi') || 
               w.startsWith('ji') || 
               w.startsWith('je') || 
               w.startsWith('ge') ||
-              w.startsWith('gra') ||
-              w.startsWith('dra') ||
+              w.startsWith('gr') ||
+              w.startsWith('dr') ||
+              w.startsWith('ch') ||
               w.includes('raf') ||
               w.includes('ffe') ||
               w.includes('rapah')
