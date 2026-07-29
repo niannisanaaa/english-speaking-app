@@ -46,26 +46,40 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
     { id: 'panda', name: 'Panda', image: '/images/Panda.png', emoji: '🐼' }
   ];
 
+  const resolveMediaUrl = (path) => {
+    return window.__zooBlobUrls?.[path] || path;
+  };
+
   // Resolve active video source
   const getVideoSrc = () => {
+    let rawPath = '/Videos/scene_03_ispy_loop_waiting_click.mp4';
     switch (quizState) {
       case 'intro':
-        return '/Videos/scene_03_ispy_01_intro_dialogue.mp4.mp4';
+        rawPath = '/Videos/scene_03_ispy_01_intro_dialogue.mp4.mp4';
+        break;
       case 'prompt':
-        return `/Videos/${currentQuestion.promptVideo}`;
+        rawPath = `/Videos/${currentQuestion.promptVideo}`;
+        break;
       case 'milo_tap':
-        return '/Videos/scene_03_ispy_milo_tap_prompt.mp4';
+        rawPath = '/Videos/scene_03_ispy_milo_tap_prompt.mp4';
+        break;
       case 'waiting_loop':
-        return '/Videos/scene_03_ispy_loop_waiting_click.mp4';
+        rawPath = '/Videos/scene_03_ispy_loop_waiting_click.mp4';
+        break;
       case 'feedback_correct':
-        return '/Videos/scene_03_ispy_feedback_correct.mp4';
+        rawPath = '/Videos/scene_03_ispy_feedback_correct.mp4';
+        break;
       case 'feedback_wrong':
-        return '/Videos/scene_03_ispy_feedback_wrong.mp4';
+        rawPath = '/Videos/scene_03_ispy_feedback_wrong.mp4';
+        break;
       case 'outro':
-        return '/Videos/scene_03_ispy_feedback_correct.mp4';
+        rawPath = '/Videos/scene_03_ispy_feedback_correct.mp4';
+        break;
       default:
-        return '/Videos/scene_03_ispy_loop_waiting_click.mp4';
+        rawPath = '/Videos/scene_03_ispy_loop_waiting_click.mp4';
+        break;
     }
+    return resolveMediaUrl(rawPath);
   };
 
   const videoSrc = getVideoSrc();

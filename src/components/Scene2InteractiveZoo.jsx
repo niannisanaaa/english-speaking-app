@@ -10,10 +10,11 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
   const [stepIndex, setStepIndex] = useState(0);
   const [showCoachmark, setShowCoachmark] = useState(false);
   
-  // Speech Recognition States
+  // Speech Recognition States & Refs
   const [isListening, setIsListening] = useState(false);
   const [spokenText, setSpokenText] = useState('');
   const [speechSuccess, setSpeechSuccess] = useState(false);
+  const speechSuccessRef = useRef(false);
   const [micSupported, setMicSupported] = useState(true);
 
   const videoRef = useRef(null);
@@ -22,15 +23,20 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
   const activeAnimal = sceneData.animals[currentAnimalId] || sceneData.animals.lion;
   const currentStep = activeAnimal.steps[stepIndex] || activeAnimal.steps[0];
 
+  // Resolve media Blob URL or raw path
+  const resolveMediaUrl = (path) => {
+    return window.__zooBlobUrls?.[path] || path;
+  };
+
   // Dynamic Video Source Resolution
   const getVideoSrc = () => {
+    let rawPath = `/Videos/${currentStep.name}`;
     if (mode === 'choice_prompt') {
-      return '/Videos/scene_02_choice_next_animal.mp4';
+      rawPath = '/Videos/scene_02_choice_next_animal.mp4';
+    } else if (mode === 'free_choice') {
+      rawPath = '/Videos/scene_02_lion_03_hotspot_loop.mp4';
     }
-    if (mode === 'free_choice') {
-      return '/Videos/scene_02_lion_03_hotspot_loop.mp4';
-    }
-    return `/Videos/${currentStep.name}`;
+    return resolveMediaUrl(rawPath);
   };
 
   const videoSrc = getVideoSrc();
@@ -40,6 +46,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
     setShowCoachmark(false);
     setSpokenText('');
     setSpeechSuccess(false);
+    speechSuccessRef.current = false;
 
     if (videoRef.current) {
       // MUTE video audio during speech practice step so mic doesn't pick up video audio!
@@ -187,7 +194,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
       };
 
       recognition.onend = () => {
-        if (mode === 'guided_flow' && currentStep.isSpeechStep && !speechSuccess) {
+        if (mode === 'guided_flow' && currentStep.isSpeechStep && !speechSuccessRef.current) {
           try { recognition.start(); } catch (e) {}
         }
       };
@@ -222,6 +229,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
   };
 
   const handleSpeechSuccess = () => {
+    speechSuccessRef.current = true;
     playSuccessChime();
     setSpeechSuccess(true);
     stopSpeechRecognition();

@@ -14,7 +14,11 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
   const currentVideo = sceneData.videos[currentPartIndex];
   const totalParts = sceneData.videos.length;
 
-  const [videoSrc, setVideoSrc] = useState(`/Videos/${currentVideo.name}`);
+  const resolveMediaUrl = (path) => {
+    return window.__zooBlobUrls?.[path] || path;
+  };
+
+  const [videoSrc, setVideoSrc] = useState(resolveMediaUrl(`/Videos/${currentVideo.name}`));
 
   const hasAdvancedRef = useRef(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -22,7 +26,7 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
   // Reset when video part changes
   useEffect(() => {
     hasAdvancedRef.current = false;
-    setVideoSrc(`/Videos/${currentVideo.name}`);
+    setVideoSrc(resolveMediaUrl(`/Videos/${currentVideo.name}`));
     setProgress(0);
     setSimulatedTime(0);
     setIsPlaying(true);
