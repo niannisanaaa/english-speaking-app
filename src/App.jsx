@@ -8,8 +8,59 @@ import './App.css';
 export default function App() {
   const [currentSceneIdx, setCurrentSceneIdx] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPreloading, setIsPreloading] = useState(true);
+  const [preloadProgress, setPreloadProgress] = useState(0);
+  const [isReadyToStart, setIsReadyToStart] = useState(false);
 
   const activeScene = SCENE_CONFIG[currentSceneIdx];
+
+  // Asset Preloading Engine for Instant Smooth Playback
+  useEffect(() => {
+    const videoFiles = [
+      '/Videos/scene_01_cutscene_part1.mp4',
+      '/Videos/scene_01_cutscene_part2.mp4',
+      '/Videos/scene_01_cutscene_part3.mp4',
+      '/Videos/scene_02_lion_01_dialogue_milo_choice.mp4',
+      '/Videos/scene_02_lion_03_hotspot_loop.mp4',
+      '/Videos/scene_02_lion_07_speak_loop.mp4',
+      '/Videos/scene_02_choice_next_animal.mp4',
+      '/Videos/scene_02_giraffe_04_appreciate_explain.mp4',
+      '/Videos/scene_02_giraffe_07_speak_loop.mp4',
+      '/images/mic_3d.png'
+    ];
+
+    let loadedCount = 0;
+    const totalFiles = videoFiles.length;
+
+    videoFiles.forEach((fileUrl) => {
+      fetch(fileUrl, { method: 'HEAD' })
+        .then(() => {
+          loadedCount++;
+          const progress = Math.min(Math.round((loadedCount / totalFiles) * 100), 100);
+          setPreloadProgress(progress);
+          if (loadedCount >= totalFiles) {
+            setIsReadyToStart(true);
+          }
+        })
+        .catch(() => {
+          // Even if fetch fails, advance progress
+          loadedCount++;
+          const progress = Math.min(Math.round((loadedCount / totalFiles) * 100), 100);
+          setPreloadProgress(progress);
+          if (loadedCount >= totalFiles) {
+            setIsReadyToStart(true);
+          }
+        });
+    });
+
+    // Fallback timer ensures loading finishes in max 3.5s
+    const timer = setTimeout(() => {
+      setPreloadProgress(100);
+      setIsReadyToStart(true);
+    }, 3500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -31,6 +82,10 @@ export default function App() {
     }
   };
 
+  const handleStartApp = () => {
+    setIsPreloading(false);
+  };
+
   const handleNextScene = () => {
     if (currentSceneIdx < SCENE_CONFIG.length - 1) {
       setCurrentSceneIdx(prev => prev + 1);
@@ -45,6 +100,54 @@ export default function App() {
 
   return (
     <div className={`app-container ${isFullscreen ? 'fullscreen-mode' : ''}`}>
+      {/* INITIAL ASSET PRELOADER SCREEN */}
+      {isPreloading && (
+        <div className="preloader-overlay">
+          <div className="preloader-card glass-panel">
+            <div className="preloader-header">
+              <div className="preloader-badge">
+                <Sparkles size={18} color="var(--accent-gold)" />
+                <span>Interactive English Zoo</span>
+              </div>
+              <h1 className="preloader-title">Preparing Zoo Adventure! 🦁🦒</h1>
+              <p className="preloader-subtitle">Loading high-definition video assets & interactive scenes...</p>
+            </div>
+
+            {/* Dynamic Progress Bar */}
+            <div className="preloader-progress-wrapper">
+              <div className="preloader-progress-track">
+                <div 
+                  className="preloader-progress-fill" 
+                  style={{ width: `${preloadProgress}%` }}
+                />
+              </div>
+              <div className="preloader-percentage-row">
+                <span>{preloadProgress < 100 ? 'Buffering Media Assets...' : 'All Zoo Assets Ready!'}</span>
+                <span className="percent-text">{preloadProgress}%</span>
+              </div>
+            </div>
+
+            {/* Floating Animal Badges */}
+            <div className="preloader-animal-badges">
+              <span className="animal-chip">🦁 Lion</span>
+              <span className="animal-chip">🦒 Giraffe</span>
+              <span className="animal-chip">🐘 Elephant</span>
+              <span className="animal-chip">🐼 Panda</span>
+            </div>
+
+            {/* Start Adventure Button */}
+            <button 
+              className={`start-adventure-btn ${isReadyToStart ? 'ready' : ''}`}
+              onClick={handleStartApp}
+              disabled={!isReadyToStart}
+            >
+
+              <span>{isReadyToStart ? 'START ADVENTURE! 🚀' : 'LOADING ASSETS...'}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Top Main Navigation Header (Hidden in Fullscreen Mode) */}
       {!isFullscreen && (
         <nav className="main-navbar glass-panel">

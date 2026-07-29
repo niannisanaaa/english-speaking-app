@@ -220,13 +220,11 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
     setSpeechSuccess(true);
     stopSpeechRecognition();
 
-    // Transition to Speech Success Video (Last step of current animal)
+    // Instant transition to Speech Success Video (Last step of current animal)
     const successStepIdx = activeAnimal.steps.findIndex(s => s.id === 'speech_success');
-    setTimeout(() => {
-      if (successStepIdx !== -1) {
-        setStepIndex(successStepIdx);
-      }
-    }, 600);
+    if (successStepIdx !== -1) {
+      setStepIndex(successStepIdx);
+    }
   };
 
   const handleVideoEnd = () => {
@@ -267,14 +265,10 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
 
       if (isAllDone) {
         // All available animals discovered -> Auto-advance to Scene 3!
-        setTimeout(() => {
-          if (onNextScene) onNextScene();
-        }, 600);
+        if (onNextScene) onNextScene();
       } else {
         // Return to Teacher Choice Prompt ("Which animal next?")
-        setTimeout(() => {
-          setMode('choice_prompt');
-        }, 400);
+        setMode('choice_prompt');
       }
     }
   };
@@ -340,6 +334,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
           src={videoSrc}
           className="main-video-player"
           onEnded={handleVideoEnd}
+          preload="auto"
           playsInline
           autoPlay
         />

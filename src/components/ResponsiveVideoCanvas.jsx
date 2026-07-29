@@ -59,22 +59,11 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
     hasAdvancedRef.current = true;
 
     if (currentPartIndex < totalParts - 1) {
-      setIsTransitioning(true);
-      
-      // Step 1: Fade to black, change video mid-way
-      setTimeout(() => {
-        setCurrentPartIndex(prev => prev + 1);
-        // Step 2: Remove black screen after transition completes
-        setTimeout(() => {
-          setIsTransitioning(false);
-        }, 500);
-      }, 500);
+      // Instant seamless continuation without black screen delay
+      setCurrentPartIndex(prev => prev + 1);
     } else {
       setIsPlaying(false);
-      // Auto-advance to next scene (Scene 2) when Scene 1 completes
-      setTimeout(() => {
-        if (onNextScene) onNextScene();
-      }, 500);
+      if (onNextScene) onNextScene();
     }
   };
 
@@ -173,9 +162,6 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
 
       {/* Main Responsive Video Canvas Container */}
       <div className="video-aspect-container glass-panel">
-        {/* Clean 1-Second Black Screen Transition Overlay */}
-        <div className={`scene-transition-overlay ${isTransitioning ? 'active' : ''}`} />
-
         {/* Real Video Player */}
         {!videoError ? (
           <video
@@ -185,6 +171,7 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
             onEnded={handleVideoEnd}
             onTimeUpdate={handleTimeUpdate}
             onError={handleVideoError}
+            preload="auto"
             playsInline
             autoPlay
           />
