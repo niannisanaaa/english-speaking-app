@@ -5,6 +5,8 @@ import Scene2InteractiveZoo from './components/Scene2InteractiveZoo';
 import { Sparkles, MapPin, Maximize2, Minimize2, X } from 'lucide-react';
 import './App.css';
 
+import Scene3ISpyQuiz from './components/Scene3ISpyQuiz';
+
 export default function App() {
   const [currentSceneIdx, setCurrentSceneIdx] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -211,6 +213,14 @@ export default function App() {
           />
         ) : activeScene.type === 'interactive_zoo' ? (
           <Scene2InteractiveZoo
+            sceneData={activeScene}
+            onNextScene={handleNextScene}
+            onPrevScene={handlePrevScene}
+            hasPrevScene={currentSceneIdx > 0}
+            hasNextScene={currentSceneIdx < SCENE_CONFIG.length - 1}
+          />
+        ) : activeScene.type === 'quiz' ? (
+          <Scene3ISpyQuiz
             sceneData={activeScene}
             onNextScene={handleNextScene}
             onPrevScene={handlePrevScene}
