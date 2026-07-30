@@ -104,6 +104,66 @@
   font-size: 1rem;
 }
 
+/* Real-time Internet Speed & Total Downloaded File Size Bar */
+.preloader-metrics-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 10px 16px;
+  margin-top: 6px;
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.1);
+}
+
+.metric-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.metric-icon.speed-icon {
+  color: #fbbf24;
+  animation: pulseZap 1.2s infinite ease-in-out;
+}
+
+.metric-icon.size-icon {
+  color: #38bdf8;
+}
+
+@keyframes pulseZap {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.8; }
+}
+
+.metric-label {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.metric-value {
+  font-weight: 800;
+  color: #ffffff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.metric-value.speed-val {
+  color: #fde047;
+}
+
+.metric-value.size-val {
+  color: #38bdf8;
+}
+
+.metric-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
 .preloader-animal-badges {
   display: flex;
   gap: 10px;

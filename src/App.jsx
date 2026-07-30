@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SCENE_CONFIG } from './scenesConfig';
 import ResponsiveVideoCanvas from './components/ResponsiveVideoCanvas';
 import Scene2InteractiveZoo from './components/Scene2InteractiveZoo';
-import { Sparkles, MapPin, Maximize2, Minimize2, X } from 'lucide-react';
+import { Sparkles, MapPin, Maximize2, Minimize2, X, Zap, HardDrive, Wifi } from 'lucide-react';
 import './App.css';
 
 import Scene3ISpyQuiz from './components/Scene3ISpyQuiz';
@@ -14,9 +14,22 @@ export default function App() {
   const [preloadProgress, setPreloadProgress] = useState(0);
   const [isReadyToStart, setIsReadyToStart] = useState(false);
 
+  // Real-time Download Metrics State
+  const [downloadedBytes, setDownloadedBytes] = useState(0);
+  const [totalBytes, setTotalBytes] = useState(0);
+  const [downloadSpeed, setDownloadSpeed] = useState('0 KB/s');
+
   const activeScene = SCENE_CONFIG[currentSceneIdx];
 
-  // Global Blob URL preloading engine for instant, 0ms latency video playback
+  const formatBytes = (bytes) => {
+    if (!bytes || bytes <= 0) return '0 MB';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  // Global Blob URL preloading engine with real-time speed & byte progress tracking
   useEffect(() => {
     window.__zooBlobUrls = window.__zooBlobUrls || {};
 
@@ -60,40 +73,114 @@ export default function App() {
       '/Videos/scene_03_ispy_feedback_wrong.mp4'
     ];
 
-    let loadedCount = 0;
+    let totalDownloaded = 0;
+    let knownTotalBytes = 0;
+    let lastBytes = 0;
+    let lastTime = performance.now();
+
+    // Download Speed Calculation Ticker (Runs every 350ms)
+    const speedTicker = setInterval(() => {
+      const now = performance.now();
+      const timeDelta = (now - lastTime) / 1000;
+      if (timeDelta > 0) {
+        const bytesDelta = totalDownloaded - lastBytes;
+        const speedBps = bytesDelta / timeDelta;
+        if (speedBps > 0) {
+          setDownloadSpeed(
+            speedBps >= 1024 * 1024
+              ? `${(speedBps / (1024 * 1024)).toFixed(1)} MB/s`
+              : `${Math.round(speedBps / 1024)} KB/s`
+          );
+        }
+        lastBytes = totalDownloaded;
+        lastTime = now;
+      }
+    }, 350);
+
+    // Initial HEAD requests to calculate exact Total Download Size
+    const fetchTotalSize = async () => {
+      try {
+        const sizes = await Promise.all(
+          mediaList.map(async (url) => {
+            try {
+              const res = await fetch(url, { method: 'HEAD' });
+              const len = res.headers.get('content-length');
+              return len ? parseInt(len, 10) : 0;
+            } catch {
+              return 0;
+            }
+          })
+        );
+        const sum = sizes.reduce((a, b) => a + b, 0);
+        if (sum > 0) {
+          knownTotalBytes = sum;
+          setTotalBytes(sum);
+        }
+      } catch (err) {
+        console.warn('HEAD total size calculation error:', err);
+      }
+    };
+
+    fetchTotalSize();
+
+    let completedFiles = 0;
     const totalFiles = mediaList.length;
 
-    const loadSingleAsset = async (url) => {
+    const streamSingleAsset = async (url) => {
       try {
         const response = await fetch(url);
         if (response.ok) {
-          const blob = await response.blob();
-          const blobUrl = URL.createObjectURL(blob);
-          window.__zooBlobUrls[url] = blobUrl;
+          if (response.body) {
+            const reader = response.body.getReader();
+            const chunks = [];
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              chunks.push(value);
+              totalDownloaded += value.byteLength;
+              setDownloadedBytes(totalDownloaded);
+              if (knownTotalBytes > 0) {
+                const pct = Math.min(Math.round((totalDownloaded / knownTotalBytes) * 100), 100);
+                setPreloadProgress(pct);
+              }
+            }
+            const blob = new Blob(chunks);
+            const blobUrl = URL.createObjectURL(blob);
+            window.__zooBlobUrls[url] = blobUrl;
+          } else {
+            const blob = await response.blob();
+            totalDownloaded += blob.size;
+            setDownloadedBytes(totalDownloaded);
+            window.__zooBlobUrls[url] = URL.createObjectURL(blob);
+          }
         }
       } catch (err) {
-        console.warn(`Failed to preload ${url}:`, err);
+        console.warn(`Streaming failed for ${url}:`, err);
       } finally {
-        loadedCount++;
-        const pct = Math.min(Math.round((loadedCount / totalFiles) * 100), 100);
-        setPreloadProgress(pct);
-        if (loadedCount >= totalFiles) {
+        completedFiles++;
+        if (knownTotalBytes === 0) {
+          const filePct = Math.min(Math.round((completedFiles / totalFiles) * 100), 100);
+          setPreloadProgress(filePct);
+        }
+        if (completedFiles >= totalFiles) {
           setIsReadyToStart(true);
         }
       }
     };
 
-    // Preload files in batches of 4 to prevent network throttling
+    // Preload files in parallel batches of 4
     const BATCH_SIZE = 4;
-    const runBatchPreload = async () => {
+    const runBatchDownload = async () => {
       for (let i = 0; i < mediaList.length; i += BATCH_SIZE) {
         const batch = mediaList.slice(i, i + BATCH_SIZE);
-        await Promise.all(batch.map(url => loadSingleAsset(url)));
+        await Promise.all(batch.map(url => streamSingleAsset(url)));
       }
       setIsReadyToStart(true);
     };
 
-    runBatchPreload();
+    runBatchDownload();
+
+    return () => clearInterval(speedTicker);
   }, []);
 
   useEffect(() => {
@@ -147,7 +234,7 @@ export default function App() {
               <p className="preloader-subtitle">Loading high-definition video assets & interactive scenes...</p>
             </div>
 
-            {/* Dynamic Progress Bar */}
+            {/* Dynamic Progress Bar & Real-time Metrics */}
             <div className="preloader-progress-wrapper">
               <div className="preloader-progress-track">
                 <div 
@@ -156,8 +243,25 @@ export default function App() {
                 />
               </div>
               <div className="preloader-percentage-row">
-                <span>{preloadProgress < 100 ? 'Buffering Media Assets...' : 'All Zoo Assets Ready!'}</span>
+                <span>{preloadProgress < 100 ? 'Downloading HD Video Assets for Instant Playback...' : '100% Zoo Media Buffered & Ready!'}</span>
                 <span className="percent-text">{preloadProgress}%</span>
+              </div>
+
+              {/* Real-time Internet Speed & Total File Size Metrics Bar */}
+              <div className="preloader-metrics-bar">
+                <div className="metric-item">
+                  <Zap size={14} className="metric-icon speed-icon" />
+                  <span className="metric-label">Speed:</span>
+                  <span className="metric-value speed-val">{preloadProgress < 100 ? downloadSpeed : 'Completed'}</span>
+                </div>
+                <div className="metric-divider"></div>
+                <div className="metric-item">
+                  <HardDrive size={14} className="metric-icon size-icon" />
+                  <span className="metric-label">Downloaded:</span>
+                  <span className="metric-value size-val">
+                    {formatBytes(downloadedBytes)} {totalBytes > 0 ? `/ ${formatBytes(totalBytes)}` : ''}
+                  </span>
+                </div>
               </div>
             </div>
 
