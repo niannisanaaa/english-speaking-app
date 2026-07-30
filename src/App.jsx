@@ -160,23 +160,22 @@ export default function App() {
               <span className="animal-chip">🦒 Giraffe</span>
               <span className="animal-chip">🐘 Elephant</span>
               <span className="animal-chip">🐼 Panda</span>
+              {/* Start Adventure Button (Only appears when ALL assets are 100% ready!) */}
+              {isReadyToStart && (
+                <button 
+                  className="start-adventure-btn ready"
+                  onClick={handleStartApp}
+                >
+                  <span>START ADVENTURE! 🚀</span>
+                </button>
+              )}
             </div>
-
-            {/* Start Adventure Button */}
-            <button 
-              className={`start-adventure-btn ${isReadyToStart ? 'ready' : ''}`}
-              onClick={handleStartApp}
-              disabled={!isReadyToStart}
-            >
-
-              <span>{isReadyToStart ? 'START ADVENTURE! 🚀' : 'LOADING ASSETS...'}</span>
-            </button>
           </div>
         </div>
       )}
 
-      {/* Top Main Navigation Header (Hidden in Fullscreen Mode) */}
-      {!isFullscreen && (
+      {/* Top Main Navigation Header (Hidden in Fullscreen Mode & During Preloader) */}
+      {!isFullscreen && !isPreloading && (
         <nav className="main-navbar glass-panel">
           <div className="nav-brand">
             <div className="logo-icon">
@@ -226,55 +225,57 @@ export default function App() {
         </button>
       )}
 
-      {/* Dynamic Scene Content View */}
-      <main className="main-content">
-        {activeScene.type === 'sequential_videos' ? (
-          <ResponsiveVideoCanvas
-            sceneData={activeScene}
-            onNextScene={handleNextScene}
-            onPrevScene={handlePrevScene}
-            hasPrevScene={currentSceneIdx > 0}
-            hasNextScene={currentSceneIdx < SCENE_CONFIG.length - 1}
-          />
-        ) : activeScene.type === 'interactive_zoo' ? (
-          <Scene2InteractiveZoo
-            sceneData={activeScene}
-            onNextScene={handleNextScene}
-            onPrevScene={handlePrevScene}
-            hasPrevScene={currentSceneIdx > 0}
-            hasNextScene={currentSceneIdx < SCENE_CONFIG.length - 1}
-          />
-        ) : activeScene.type === 'quiz' ? (
-          <Scene3ISpyQuiz
-            sceneData={activeScene}
-            onNextScene={handleNextScene}
-            onPrevScene={handlePrevScene}
-            hasPrevScene={currentSceneIdx > 0}
-            hasNextScene={currentSceneIdx < SCENE_CONFIG.length - 1}
-          />
-        ) : (
-          /* Placeholder Card for upcoming Scenes 3, 4 */
-          <div className="upcoming-scene-card glass-panel">
-            <div className="upcoming-badge">Coming Up Next</div>
-            <h2>{activeScene.title}</h2>
-            <p>{activeScene.titleText || "This interactive scene will open once previous scenes are complete!"}</p>
+      {/* Dynamic Scene Content View (ONLY MOUNTED & PLAYED AFTER START ADVENTURE IS CLICKED!) */}
+      {!isPreloading && (
+        <main className="main-content">
+          {activeScene.type === 'sequential_videos' ? (
+            <ResponsiveVideoCanvas
+              sceneData={activeScene}
+              onNextScene={handleNextScene}
+              onPrevScene={handlePrevScene}
+              hasPrevScene={currentSceneIdx > 0}
+              hasNextScene={currentSceneIdx < SCENE_CONFIG.length - 1}
+            />
+          ) : activeScene.type === 'interactive_zoo' ? (
+            <Scene2InteractiveZoo
+              sceneData={activeScene}
+              onNextScene={handleNextScene}
+              onPrevScene={handlePrevScene}
+              hasPrevScene={currentSceneIdx > 0}
+              hasNextScene={currentSceneIdx < SCENE_CONFIG.length - 1}
+            />
+          ) : activeScene.type === 'quiz' ? (
+            <Scene3ISpyQuiz
+              sceneData={activeScene}
+              onNextScene={handleNextScene}
+              onPrevScene={handlePrevScene}
+              hasPrevScene={currentSceneIdx > 0}
+              hasNextScene={currentSceneIdx < SCENE_CONFIG.length - 1}
+            />
+          ) : (
+            /* Placeholder Card for upcoming Scenes 3, 4 */
+            <div className="upcoming-scene-card glass-panel">
+              <div className="upcoming-badge">Coming Up Next</div>
+              <h2>{activeScene.title}</h2>
+              <p>{activeScene.titleText || "This interactive scene will open once previous scenes are complete!"}</p>
 
-            <div className="navigation-actions">
-              <button className="nav-arrow-btn" onClick={handlePrevScene}>
-                ◄ Back to Scene 2
-              </button>
-              {currentSceneIdx < SCENE_CONFIG.length - 1 && (
-                <button className="action-pill-btn" onClick={handleNextScene}>
-                  Next Scene ►
+              <div className="navigation-actions">
+                <button className="nav-arrow-btn" onClick={handlePrevScene}>
+                  ◄ Back to Scene 2
                 </button>
-              )}
+                {currentSceneIdx < SCENE_CONFIG.length - 1 && (
+                  <button className="action-pill-btn" onClick={handleNextScene}>
+                    Next Scene ►
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
+      )}
 
       {/* Footer Info (Hidden in Fullscreen Mode) */}
-      {!isFullscreen && (
+      {!isFullscreen && !isPreloading && (
         <footer className="app-footer glass-panel">
           <p>🦁 <strong>Scene 2 Active:</strong> Discovering Lion with Hotspot Ring & Speech Recognition</p>
         </footer>
