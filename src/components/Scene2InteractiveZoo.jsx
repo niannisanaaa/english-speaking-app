@@ -41,6 +41,12 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
 
   const videoSrc = getVideoSrc();
 
+  const videoRef0 = useRef(null);
+  const videoRef1 = useRef(null);
+  const [activePlayer, setActivePlayer] = useState(0);
+  const [src0, setSrc0] = useState(videoSrc);
+  const [src1, setSrc1] = useState('');
+
   // Reset states when step, animal, or mode changes
   useEffect(() => {
     setShowCoachmark(false);
@@ -48,11 +54,26 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
     setSpeechSuccess(false);
     speechSuccessRef.current = false;
 
-  const videoRef0 = useRef(null);
-  const videoRef1 = useRef(null);
-  const [activePlayer, setActivePlayer] = useState(0);
-  const [src0, setSrc0] = useState(videoSrc);
-  const [src1, setSrc1] = useState('');
+    // Step 3 or Free Choice Hotspot Timer (5 Seconds)
+    let coachmarkTimer;
+    if (mode === 'free_choice' || (mode === 'guided_flow' && currentStep.isHotspotStep)) {
+      coachmarkTimer = setTimeout(() => {
+        setShowCoachmark(true);
+      }, 5000);
+    }
+
+    // Step 7 Speech Recognition Trigger
+    if (mode === 'guided_flow' && currentStep.isSpeechStep) {
+      startSpeechRecognition();
+    } else {
+      stopSpeechRecognition();
+    }
+
+    return () => {
+      if (coachmarkTimer) clearTimeout(coachmarkTimer);
+      stopSpeechRecognition();
+    };
+  }, [stepIndex, currentAnimalId, mode]);
 
   // Pre-buffer next video and switch seamlessly
   useEffect(() => {
@@ -101,27 +122,6 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
       }
     }
   };
-
-    // Step 3 or Free Choice Hotspot Timer (5 Seconds)
-    let coachmarkTimer;
-    if (mode === 'free_choice' || (mode === 'guided_flow' && currentStep.isHotspotStep)) {
-      coachmarkTimer = setTimeout(() => {
-        setShowCoachmark(true);
-      }, 5000);
-    }
-
-    // Step 7 Speech Recognition Trigger
-    if (mode === 'guided_flow' && currentStep.isSpeechStep) {
-      startSpeechRecognition();
-    } else {
-      stopSpeechRecognition();
-    }
-
-    return () => {
-      if (coachmarkTimer) clearTimeout(coachmarkTimer);
-      stopSpeechRecognition();
-    };
-  }, [stepIndex, currentAnimalId, mode]);
 
   const [audioVolume, setAudioVolume] = useState(0);
   const audioCtxRef = useRef(null);
