@@ -56,26 +56,40 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
 
   // Pre-buffer next video and switch seamlessly
   useEffect(() => {
+    const isMuted = (currentStep?.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep?.isSpeechStep));
+
     if (activePlayer === 0) {
-      if (src0 !== videoSrc) {
+      if (src0 === videoSrc) {
+        if (videoRef0.current) {
+          videoRef0.current.currentTime = 0;
+          videoRef0.current.muted = isMuted;
+          videoRef0.current.play().catch(() => {});
+        }
+      } else {
         setSrc1(videoSrc);
         if (videoRef1.current) {
           videoRef1.current.currentTime = 0;
-          videoRef1.current.muted = (currentStep.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep.isSpeechStep));
+          videoRef1.current.muted = isMuted;
           videoRef1.current.play().catch(() => {});
         }
       }
     } else {
-      if (src1 !== videoSrc) {
+      if (src1 === videoSrc) {
+        if (videoRef1.current) {
+          videoRef1.current.currentTime = 0;
+          videoRef1.current.muted = isMuted;
+          videoRef1.current.play().catch(() => {});
+        }
+      } else {
         setSrc0(videoSrc);
         if (videoRef0.current) {
           videoRef0.current.currentTime = 0;
-          videoRef0.current.muted = (currentStep.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep.isSpeechStep));
+          videoRef0.current.muted = isMuted;
           videoRef0.current.play().catch(() => {});
         }
       }
     }
-  }, [videoSrc]);
+  }, [videoSrc, stepIndex, mode]);
 
   const handleVideoPlaying = (playerIndex) => {
     if (playerIndex !== activePlayer) {

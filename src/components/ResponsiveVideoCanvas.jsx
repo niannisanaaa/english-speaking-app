@@ -34,7 +34,12 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
     const nextSrc = resolveMediaUrl(`/Videos/${currentVideo.name}`);
 
     if (activePlayer === 0) {
-      if (src0 !== nextSrc) {
+      if (src0 === nextSrc) {
+        if (videoRef0.current) {
+          videoRef0.current.currentTime = 0;
+          videoRef0.current.play().catch(() => {});
+        }
+      } else {
         setSrc1(nextSrc);
         if (videoRef1.current) {
           videoRef1.current.currentTime = 0;
@@ -42,7 +47,12 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
         }
       }
     } else {
-      if (src1 !== nextSrc) {
+      if (src1 === nextSrc) {
+        if (videoRef1.current) {
+          videoRef1.current.currentTime = 0;
+          videoRef1.current.play().catch(() => {});
+        }
+      } else {
         setSrc0(nextSrc);
         if (videoRef0.current) {
           videoRef0.current.currentTime = 0;
