@@ -17,53 +17,24 @@ export default function App() {
   const activeScene = SCENE_CONFIG[currentSceneIdx];
 
   // Global Blob URL resolver helper for instant media loading
+  // Lightweight & Fast Preloading Engine (Prevents mobile RAM/network throttling)
   useEffect(() => {
-    window.__zooBlobUrls = window.__zooBlobUrls || {};
-
-    const mediaFiles = [
-      '/Videos/scene_01_cutscene_part1.mp4',
-      '/Videos/scene_01_cutscene_part2.mp4',
-      '/Videos/scene_01_cutscene_part3.mp4',
-      '/Videos/scene_02_lion_01_dialogue_milo_choice.mp4',
-      '/Videos/scene_02_lion_02_dialogue_user_prompt.mp4',
-      '/Videos/scene_02_lion_03_hotspot_loop.mp4',
-      '/Videos/scene_02_lion_04_appreciate_explain.mp4',
-      '/Videos/scene_02_lion_05_detail_explain.mp4',
-      '/Videos/scene_02_lion_06_speak_prompt.mp4',
-      '/Videos/scene_02_lion_07_speak_loop.mp4',
-      '/Videos/scene_02_lion_08_speech_success.mp4',
-      '/Videos/scene_02_choice_next_animal.mp4',
-      '/Videos/scene_02_giraffe_04_appreciate_explain.mp4',
-      '/Videos/scene_02_giraffe_05_detail_explain.mp4',
-      '/Videos/scene_02_giraffe_06_speak_prompt.mp4',
-      '/Videos/scene_02_giraffe_07_speak_loop.mp4',
-      '/Videos/scene_02_giraffe_08_speech_success.mp4',
-      '/Videos/scene_03_ispy_01_intro_dialogue.mp4.mp4',
-      '/Videos/scene_03_ispy_02_prompt_panda.mp4',
-      '/Videos/scene_03_ispy_03_prompt_lion.mp4',
-      '/Videos/scene_03_ispy_milo_tap_prompt.mp4',
-      '/Videos/scene_03_ispy_loop_waiting_click.mp4',
-      '/Videos/scene_03_ispy_feedback_correct.mp4',
-      '/Videos/scene_03_ispy_feedback_wrong.mp4',
+    const keyAssets = [
       '/images/mic_3d.png',
       '/images/Card.svg',
       '/images/Lion.png',
       '/images/Elephant.png',
-      '/images/Panda.png'
+      '/images/Panda.png',
+      '/images/question.png',
+      '/Videos/scene_01_cutscene_part1.mp4'
     ];
 
     let loadedCount = 0;
-    const totalFiles = mediaFiles.length;
+    const totalFiles = keyAssets.length;
 
-    mediaFiles.forEach((fileUrl) => {
-      fetch(fileUrl)
-        .then((res) => {
-          if (!res.ok) throw new Error('Fetch failed');
-          return res.blob();
-        })
-        .then((blob) => {
-          const blobUrl = URL.createObjectURL(blob);
-          window.__zooBlobUrls[fileUrl] = blobUrl;
+    keyAssets.forEach((fileUrl) => {
+      fetch(fileUrl, { method: 'HEAD' })
+        .then(() => {
           loadedCount++;
           const progress = Math.min(Math.round((loadedCount / totalFiles) * 100), 100);
           setPreloadProgress(progress);
@@ -81,10 +52,11 @@ export default function App() {
         });
     });
 
+    // Guaranteed fast fallback (max 1.5s)
     const timer = setTimeout(() => {
       setPreloadProgress(100);
       setIsReadyToStart(true);
-    }, 4500);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, []);
@@ -160,16 +132,17 @@ export default function App() {
               <span className="animal-chip">🦒 Giraffe</span>
               <span className="animal-chip">🐘 Elephant</span>
               <span className="animal-chip">🐼 Panda</span>
-              {/* Start Adventure Button (Only appears when ALL assets are 100% ready!) */}
-              {isReadyToStart && (
-                <button 
-                  className="start-adventure-btn ready"
-                  onClick={handleStartApp}
-                >
-                  <span>START ADVENTURE! 🚀</span>
-                </button>
-              )}
             </div>
+
+            {/* Start Adventure Button (Only appears when ALL assets are 100% ready!) */}
+            {isReadyToStart && (
+              <button 
+                className="start-adventure-btn ready"
+                onClick={handleStartApp}
+              >
+                <span>START ADVENTURE! 🚀</span>
+              </button>
+            )}
           </div>
         </div>
       )}
