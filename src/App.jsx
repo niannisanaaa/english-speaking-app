@@ -16,49 +16,84 @@ export default function App() {
 
   const activeScene = SCENE_CONFIG[currentSceneIdx];
 
-  // Global Blob URL resolver helper for instant media loading
-  // Lightweight & Fast Preloading Engine (Prevents mobile RAM/network throttling)
+  // Global Blob URL preloading engine for instant, 0ms latency video playback
   useEffect(() => {
-    const keyAssets = [
+    window.__zooBlobUrls = window.__zooBlobUrls || {};
+
+    const mediaList = [
+      // UI Assets & Images
       '/images/mic_3d.png',
       '/images/Card.svg',
       '/images/Lion.png',
       '/images/Elephant.png',
       '/images/Panda.png',
       '/images/question.png',
-      '/Videos/scene_01_cutscene_part1.mp4'
+
+      // Scene 1 Cutscene Videos
+      '/Videos/scene_01_cutscene_part1.mp4',
+      '/Videos/scene_01_cutscene_part2.mp4',
+      '/Videos/scene_01_cutscene_part3.mp4',
+
+      // Scene 2 Interactive Zoo Videos
+      '/Videos/scene_02_choice_next_animal.mp4',
+      '/Videos/scene_02_lion_01_dialogue_milo_choice.mp4',
+      '/Videos/scene_02_lion_02_dialogue_user_prompt.mp4',
+      '/Videos/scene_02_lion_03_hotspot_loop.mp4',
+      '/Videos/scene_02_lion_04_appreciate_explain.mp4',
+      '/Videos/scene_02_lion_05_detail_explain.mp4',
+      '/Videos/scene_02_lion_06_speak_prompt.mp4',
+      '/Videos/scene_02_lion_07_speak_loop.mp4',
+      '/Videos/scene_02_lion_08_speech_success.mp4',
+      '/Videos/scene_02_giraffe_04_appreciate_explain.mp4',
+      '/Videos/scene_02_giraffe_05_detail_explain.mp4',
+      '/Videos/scene_02_giraffe_06_speak_prompt.mp4',
+      '/Videos/scene_02_giraffe_07_speak_loop.mp4',
+      '/Videos/scene_02_giraffe_08_speech_success.mp4',
+
+      // Scene 3 I Spy Quiz Videos
+      '/Videos/scene_03_ispy_01_intro_dialogue.mp4',
+      '/Videos/scene_03_ispy_02_prompt_panda.mp4',
+      '/Videos/scene_03_ispy_03_prompt_lion.mp4',
+      '/Videos/scene_03_ispy_loop_waiting_click.mp4',
+      '/Videos/scene_03_ispy_milo_tap_prompt.mp4',
+      '/Videos/scene_03_ispy_feedback_correct.mp4',
+      '/Videos/scene_03_ispy_feedback_wrong.mp4'
     ];
 
     let loadedCount = 0;
-    const totalFiles = keyAssets.length;
+    const totalFiles = mediaList.length;
 
-    keyAssets.forEach((fileUrl) => {
-      fetch(fileUrl, { method: 'HEAD' })
-        .then(() => {
-          loadedCount++;
-          const progress = Math.min(Math.round((loadedCount / totalFiles) * 100), 100);
-          setPreloadProgress(progress);
-          if (loadedCount >= totalFiles) {
-            setIsReadyToStart(true);
-          }
-        })
-        .catch(() => {
-          loadedCount++;
-          const progress = Math.min(Math.round((loadedCount / totalFiles) * 100), 100);
-          setPreloadProgress(progress);
-          if (loadedCount >= totalFiles) {
-            setIsReadyToStart(true);
-          }
-        });
-    });
+    const loadSingleAsset = async (url) => {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          window.__zooBlobUrls[url] = blobUrl;
+        }
+      } catch (err) {
+        console.warn(`Failed to preload ${url}:`, err);
+      } finally {
+        loadedCount++;
+        const pct = Math.min(Math.round((loadedCount / totalFiles) * 100), 100);
+        setPreloadProgress(pct);
+        if (loadedCount >= totalFiles) {
+          setIsReadyToStart(true);
+        }
+      }
+    };
 
-    // Guaranteed fast fallback (max 1.5s)
-    const timer = setTimeout(() => {
-      setPreloadProgress(100);
+    // Preload files in batches of 4 to prevent network throttling
+    const BATCH_SIZE = 4;
+    const runBatchPreload = async () => {
+      for (let i = 0; i < mediaList.length; i += BATCH_SIZE) {
+        const batch = mediaList.slice(i, i + BATCH_SIZE);
+        await Promise.all(batch.map(url => loadSingleAsset(url)));
+      }
       setIsReadyToStart(true);
-    }, 1500);
+    };
 
-    return () => clearTimeout(timer);
+    runBatchPreload();
   }, []);
 
   useEffect(() => {
