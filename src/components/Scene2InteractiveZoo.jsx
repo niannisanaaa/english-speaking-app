@@ -48,12 +48,45 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
     setSpeechSuccess(false);
     speechSuccessRef.current = false;
 
-    if (videoRef.current) {
-      // MUTE video audio during speech practice step so mic doesn't pick up video audio!
-      videoRef.current.muted = (mode === 'guided_flow' && currentStep.isSpeechStep);
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
+  const videoRef0 = useRef(null);
+  const videoRef1 = useRef(null);
+  const [activePlayer, setActivePlayer] = useState(0);
+  const [src0, setSrc0] = useState(videoSrc);
+  const [src1, setSrc1] = useState('');
+
+  // Pre-buffer next video and switch seamlessly
+  useEffect(() => {
+    if (activePlayer === 0) {
+      if (src0 !== videoSrc) {
+        setSrc1(videoSrc);
+        if (videoRef1.current) {
+          videoRef1.current.currentTime = 0;
+          videoRef1.current.muted = (mode === 'guided_flow' && currentStep.isSpeechStep);
+          videoRef1.current.play().catch(() => {});
+        }
+      }
+    } else {
+      if (src1 !== videoSrc) {
+        setSrc0(videoSrc);
+        if (videoRef0.current) {
+          videoRef0.current.currentTime = 0;
+          videoRef0.current.muted = (mode === 'guided_flow' && currentStep.isSpeechStep);
+          videoRef0.current.play().catch(() => {});
+        }
+      }
     }
+  }, [videoSrc]);
+
+  const handleVideoPlaying = (playerIndex) => {
+    if (playerIndex !== activePlayer) {
+      setActivePlayer(playerIndex);
+      if (playerIndex === 0 && videoRef1.current) {
+        videoRef1.current.pause();
+      } else if (playerIndex === 1 && videoRef0.current) {
+        videoRef0.current.pause();
+      }
+    }
+  };
 
     // Step 3 or Free Choice Hotspot Timer (5 Seconds)
     let coachmarkTimer;
@@ -344,10 +377,21 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
       {/* Main Video Canvas Area */}
       <div className="video-aspect-container glass-panel">
         <video
-          ref={videoRef}
-          src={videoSrc}
-          className="main-video-player"
+          ref={videoRef0}
+          src={src0}
+          className={`main-video-player ${activePlayer === 0 ? 'video-active' : 'video-hidden'}`}
           onEnded={handleVideoEnd}
+          onPlaying={() => handleVideoPlaying(0)}
+          preload="auto"
+          playsInline
+          autoPlay
+        />
+        <video
+          ref={videoRef1}
+          src={src1}
+          className={`main-video-player ${activePlayer === 1 ? 'video-active' : 'video-hidden'}`}
+          onEnded={handleVideoEnd}
+          onPlaying={() => handleVideoPlaying(1)}
           preload="auto"
           playsInline
           autoPlay

@@ -10,7 +10,10 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
   const [videoError, setVideoError] = useState(false);
   const [simulatedTime, setSimulatedTime] = useState(0);
 
-  const videoRef = useRef(null);
+  const videoRef0 = useRef(null);
+  const videoRef1 = useRef(null);
+  const [activePlayer, setActivePlayer] = useState(0); // 0 = Player A, 1 = Player B
+
   const currentVideo = sceneData.videos[currentPartIndex];
   const totalParts = sceneData.videos.length;
 
@@ -18,52 +21,58 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
     return window.__zooBlobUrls?.[path] || path;
   };
 
-  const [videoSrc, setVideoSrc] = useState(resolveMediaUrl(`/Videos/${currentVideo.name}`));
+  const [src0, setSrc0] = useState(resolveMediaUrl(`/Videos/${sceneData.videos[0]?.name}`));
+  const [src1, setSrc1] = useState(
+    sceneData.videos[1] ? resolveMediaUrl(`/Videos/${sceneData.videos[1]?.name}`) : ''
+  );
 
   const hasAdvancedRef = useRef(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Reset when video part changes
+  // Pre-buffer next video and switch seamlessly
   useEffect(() => {
     hasAdvancedRef.current = false;
-    setVideoSrc(resolveMediaUrl(`/Videos/${currentVideo.name}`));
+    const nextSrc = resolveMediaUrl(`/Videos/${currentVideo.name}`);
+
+    if (activePlayer === 0) {
+      if (src0 !== nextSrc) {
+        setSrc1(nextSrc);
+        if (videoRef1.current) {
+          videoRef1.current.currentTime = 0;
+          videoRef1.current.play().catch(() => {});
+        }
+      }
+    } else {
+      if (src1 !== nextSrc) {
+        setSrc0(nextSrc);
+        if (videoRef0.current) {
+          videoRef0.current.currentTime = 0;
+          videoRef0.current.play().catch(() => {});
+        }
+      }
+    }
+
     setProgress(0);
     setSimulatedTime(0);
     setIsPlaying(true);
     setVideoError(false);
-
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {
-        setIsPlaying(false);
-      });
-    }
   }, [currentPartIndex]);
 
-  // Simulation timer for fallback when video files are not yet uploaded
-  useEffect(() => {
-    let timer;
-    if (videoError && isPlaying) {
-      timer = setInterval(() => {
-        setSimulatedTime((prev) => {
-          if (prev >= 6) { // 6 second demo cutscene length
-            handleVideoEnd();
-            return 0;
-          }
-          setProgress((prev / 6) * 100);
-          return prev + 0.1;
-        });
-      }, 100);
+  const handleVideoPlaying = (playerIndex) => {
+    if (playerIndex !== activePlayer) {
+      setActivePlayer(playerIndex);
+      if (playerIndex === 0 && videoRef1.current) {
+        videoRef1.current.pause();
+      } else if (playerIndex === 1 && videoRef0.current) {
+        videoRef0.current.pause();
+      }
     }
-    return () => clearInterval(timer);
-  }, [videoError, isPlaying, currentPartIndex]);
+  };
 
   const handleVideoEnd = () => {
     if (hasAdvancedRef.current) return;
     hasAdvancedRef.current = true;
 
     if (currentPartIndex < totalParts - 1) {
-      // Instant seamless continuation without black screen delay
       setCurrentPartIndex(prev => prev + 1);
     } else {
       setIsPlaying(false);
@@ -72,9 +81,10 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
   };
 
   const handleTimeUpdate = () => {
-    if (videoRef.current && !hasAdvancedRef.current) {
-      const current = videoRef.current.currentTime;
-      const effectiveDuration = currentVideo.maxDuration || videoRef.current.duration || 1;
+    const activeRef = activePlayer === 0 ? videoRef0 : videoRef1;
+    if (activeRef.current && !hasAdvancedRef.current) {
+      const current = activeRef.current.currentTime;
+      const effectiveDuration = currentVideo.maxDuration || activeRef.current.duration || 1;
 
       if (currentVideo.maxDuration && current >= currentVideo.maxDuration) {
         handleVideoEnd();
@@ -85,29 +95,30 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
   };
 
   const togglePlay = () => {
+    const activeRef = activePlayer === 0 ? videoRef0 : videoRef1;
     if (videoError) {
       setIsPlaying(!isPlaying);
-    } else if (videoRef.current) {
+    } else if (activeRef.current) {
       if (isPlaying) {
-        videoRef.current.pause();
+        activeRef.current.pause();
       } else {
-        videoRef.current.play();
+        activeRef.current.play();
       }
       setIsPlaying(!isPlaying);
     }
   };
 
   const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-    }
+    if (videoRef0.current) videoRef0.current.muted = !isMuted;
+    if (videoRef1.current) videoRef1.current.muted = !isMuted;
     setIsMuted(!isMuted);
   };
 
   const handleRestartPart = () => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play();
+    const activeRef = activePlayer === 0 ? videoRef0 : videoRef1;
+    if (activeRef.current) {
+      activeRef.current.currentTime = 0;
+      activeRef.current.play();
     }
     setProgress(0);
     setSimulatedTime(0);
@@ -119,11 +130,7 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
   };
 
   const handleVideoError = () => {
-    if (videoSrc.startsWith('/Videos/')) {
-      setVideoSrc(`/videos/${currentVideo.name}`);
-    } else {
-      setVideoError(true);
-    }
+    setVideoError(true);
   };
 
   return (
@@ -166,20 +173,35 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
 
       {/* Main Responsive Video Canvas Container */}
       <div className="video-aspect-container glass-panel">
-        {/* Real Video Player */}
-        {!videoError ? (
-          <video
-            ref={videoRef}
-            src={videoSrc}
-            className="main-video-player"
-            onEnded={handleVideoEnd}
-            onTimeUpdate={handleTimeUpdate}
-            onError={handleVideoError}
-            preload="auto"
-            playsInline
-            autoPlay
-          />
-        ) : null}
+        {/* Dual Video Player A & B for 0ms Seamless Switching */}
+        {!videoError && (
+          <>
+            <video
+              ref={videoRef0}
+              src={src0}
+              className={`main-video-player ${activePlayer === 0 ? 'video-active' : 'video-hidden'}`}
+              onEnded={handleVideoEnd}
+              onPlaying={() => handleVideoPlaying(0)}
+              onTimeUpdate={handleTimeUpdate}
+              onError={handleVideoError}
+              preload="auto"
+              playsInline
+              autoPlay
+            />
+            <video
+              ref={videoRef1}
+              src={src1}
+              className={`main-video-player ${activePlayer === 1 ? 'video-active' : 'video-hidden'}`}
+              onEnded={handleVideoEnd}
+              onPlaying={() => handleVideoPlaying(1)}
+              onTimeUpdate={handleTimeUpdate}
+              onError={handleVideoError}
+              preload="auto"
+              playsInline
+              autoPlay
+            />
+          </>
+        )}
 
         {/* Fallback Animated Demo Canvas (Active before video files are uploaded) */}
         {videoError && (
