@@ -52,6 +52,7 @@
 
 /* FULLSCREEN ALIGNMENT FIX FOR SCENE 3 */
 :fullscreen .scene3-wrapper,
+.fullscreen-mode .scene3-wrapper,
 .fullscreen-active .scene3-wrapper {
   max-width: 100vw !important;
   width: 100vw !important;
@@ -63,7 +64,17 @@
   align-items: center;
 }
 
+:fullscreen .scene3-header,
+.fullscreen-mode .scene3-header,
+.fullscreen-active .scene3-header,
+:fullscreen .video-overlay-layer,
+.fullscreen-mode .video-overlay-layer,
+.fullscreen-active .video-overlay-layer {
+  display: none !important;
+}
+
 :fullscreen .video-aspect-container,
+.fullscreen-mode .video-aspect-container,
 .fullscreen-active .video-aspect-container {
   width: 100vw !important;
   height: 100vh !important;
@@ -72,6 +83,16 @@
   aspect-ratio: auto !important;
   border-radius: 0 !important;
   border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+:fullscreen .main-video-player,
+.fullscreen-mode .main-video-player,
+.fullscreen-active .main-video-player {
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: cover !important;
 }
 
 /* ==========================================================================

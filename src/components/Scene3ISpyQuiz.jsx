@@ -11,7 +11,9 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
   const [cardsVisible, setCardsVisible] = useState(false);
   const [cardsFloating, setCardsFloating] = useState(false);
 
-  const videoRef = useRef(null);
+  const [activePlayer, setActivePlayer] = useState(0); // 0 = Player A, 1 = Player B
+  const videoRef0 = useRef(null);
+  const videoRef1 = useRef(null);
 
   const quizQuestions = [
     {
@@ -55,7 +57,7 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
     let rawPath = '/Videos/scene_03_ispy_loop_waiting_click.mp4';
     switch (quizState) {
       case 'intro':
-        rawPath = '/Videos/scene_03_ispy_01_intro_dialogue.mp4.mp4';
+        rawPath = '/Videos/scene_03_ispy_01_intro_dialogue.mp4';
         break;
       case 'prompt':
         rawPath = `/Videos/${currentQuestion.promptVideo}`;
@@ -83,6 +85,76 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
   };
 
   const videoSrc = getVideoSrc();
+  const [src0, setSrc0] = useState(() => getVideoSrc());
+  const [src1, setSrc1] = useState('');
+
+  // Dual Video Switcher - Pre-buffers & switches with 0ms gap
+  useEffect(() => {
+    if (activePlayer === 0) {
+      if (src0 === videoSrc) {
+        if (videoRef0.current) {
+          if (videoRef0.current.readyState >= 1) {
+            videoRef0.current.currentTime = 0;
+          }
+          videoRef0.current.muted = (quizState === 'waiting_loop');
+          videoRef0.current.play().catch(() => {});
+        }
+      } else {
+        setSrc1(videoSrc);
+      }
+    } else {
+      if (src1 === videoSrc) {
+        if (videoRef1.current) {
+          if (videoRef1.current.readyState >= 1) {
+            videoRef1.current.currentTime = 0;
+          }
+          videoRef1.current.muted = (quizState === 'waiting_loop');
+          videoRef1.current.play().catch(() => {});
+        }
+      } else {
+        setSrc0(videoSrc);
+      }
+    }
+  }, [videoSrc]);
+
+  // Ensure DOM video elements play immediately after React updates src
+  useEffect(() => {
+    if (videoRef0.current && src0) {
+      if (videoRef0.current.readyState >= 1) {
+        videoRef0.current.currentTime = 0;
+      }
+      videoRef0.current.muted = (quizState === 'waiting_loop');
+      videoRef0.current.play().catch(() => {});
+    }
+  }, [src0]);
+
+  useEffect(() => {
+    if (videoRef1.current && src1) {
+      if (videoRef1.current.readyState >= 1) {
+        videoRef1.current.currentTime = 0;
+      }
+      videoRef1.current.muted = (quizState === 'waiting_loop');
+      videoRef1.current.play().catch(() => {});
+    }
+  }, [src1]);
+
+  const handleCanPlay = (playerIdx) => {
+    const videoEl = playerIdx === 0 ? videoRef0.current : videoRef1.current;
+    if (videoEl && videoEl.paused) {
+      videoEl.play().catch(() => {});
+    }
+  };
+
+  const handleVideoPlaying = (playerIndex) => {
+    if (playerIndex !== activePlayer) {
+      setActivePlayer(playerIndex);
+      if (playerIndex === 0 && videoRef1.current) {
+        videoRef1.current.pause();
+      } else if (playerIndex === 1 && videoRef0.current) {
+        videoRef0.current.pause();
+      }
+    }
+  };
 
   // Reset and handle card animation timeline
   useEffect(() => {
@@ -98,11 +170,6 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
       setCardsVisible(false);
       setCardsFloating(false);
     }
-
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
-    }
   }, [quizState, questionIdx]);
 
   const handleVideoEnd = () => {
@@ -117,10 +184,11 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
         setQuizState('waiting_loop');
         break;
       case 'waiting_loop':
-        // Looping video, replay
-        if (videoRef.current) {
-          videoRef.current.currentTime = 0;
-          videoRef.current.play().catch(() => {});
+        // Looping video, replay on active player
+        const activeVid = activePlayer === 0 ? videoRef0.current : videoRef1.current;
+        if (activeVid) {
+          activeVid.currentTime = 0;
+          activeVid.play().catch(() => {});
         }
         break;
       case 'feedback_correct':
@@ -205,10 +273,28 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
       {/* Main Video & Interactive Card Canvas */}
       <div className="video-aspect-container glass-panel">
         <video
-          ref={videoRef}
-          src={videoSrc}
-          className="main-video-player"
+          ref={videoRef0}
+          src={src0}
+          className={`main-video-player ${activePlayer === 0 ? 'video-active' : 'video-hidden'}`}
           onEnded={handleVideoEnd}
+          onPlaying={() => handleVideoPlaying(0)}
+          onCanPlay={() => handleCanPlay(0)}
+          onLoadedMetadata={() => handleCanPlay(0)}
+          loop={quizState === 'waiting_loop'}
+          muted={quizState === 'waiting_loop'}
+          preload="auto"
+          playsInline
+          autoPlay
+        />
+        <video
+          ref={videoRef1}
+          src={src1}
+          className={`main-video-player ${activePlayer === 1 ? 'video-active' : 'video-hidden'}`}
+          onEnded={handleVideoEnd}
+          onPlaying={() => handleVideoPlaying(1)}
+          onCanPlay={() => handleCanPlay(1)}
+          onLoadedMetadata={() => handleCanPlay(1)}
+          loop={quizState === 'waiting_loop'}
           muted={quizState === 'waiting_loop'}
           preload="auto"
           playsInline

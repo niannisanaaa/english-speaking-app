@@ -300,33 +300,52 @@
 }
 
 .app-container.fullscreen-mode .main-content {
-  width: 100vw;
-  height: 100vh;
+  width: 100vw !important;
+  height: 100vh !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
+.app-container.fullscreen-mode .scene3-wrapper,
 .app-container.fullscreen-mode .scene2-wrapper,
 .app-container.fullscreen-mode .canvas-wrapper {
-  max-width: 100vw;
-  height: 100vh;
-  padding: 0;
-  gap: 0;
-  justify-content: center;
+  max-width: 100vw !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 0 !important;
+  justify-content: center !important;
+  align-items: center !important;
 }
 
+.app-container.fullscreen-mode .scene3-header,
 .app-container.fullscreen-mode .scene2-header,
 .app-container.fullscreen-mode .canvas-header,
 .app-container.fullscreen-mode .top-nav-controls,
 .app-container.fullscreen-mode .overlay-bottom-bar,
 .app-container.fullscreen-mode .segmented-progress-bar,
-.app-container.fullscreen-mode .step-progress-row {
+.app-container.fullscreen-mode .step-progress-row,
+.app-container.fullscreen-mode .video-overlay-layer {
   display: none !important;
 }
 
 .app-container.fullscreen-mode .video-aspect-container {
-  border-radius: 0;
-  width: 100vw;
-  height: 100vh;
-  aspect-ratio: auto;
+  border-radius: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  aspect-ratio: auto !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.app-container.fullscreen-mode .main-video-player {
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: cover !important;
 }
 
 .pill-btn {
