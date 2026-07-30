@@ -91,9 +91,24 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
     };
   }, [stepIndex, currentAnimalId, mode]);
 
+  // Helpers for loop and mute state logic
+  const isCurrentVideoLoop = (step, currentMode) => {
+    if (currentMode === 'free_choice') return true;
+    if (!step) return false;
+    return !!(step.isLoop || step.id === 'speak_loop' || step.isHotspotStep);
+  };
+
+  const isCurrentVideoMuted = (step, currentMode) => {
+    if (currentMode === 'choice_prompt') return false; // Teacher choice prompt video -> UNMUTED AUDIO!
+    if (currentMode === 'free_choice') return true; // Zoo overview loop -> MUTED!
+    if (!step) return false;
+    // ONLY looping steps are MUTED
+    return !!(step.isLoop || step.id === 'speak_loop' || step.isHotspotStep);
+  };
+
   // Pre-buffer next video and switch seamlessly
   useEffect(() => {
-    const isMuted = (currentStep?.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep?.isSpeechStep));
+    const isMuted = isCurrentVideoMuted(currentStep, mode);
 
     if (activePlayer === 0) {
       if (src0 === videoSrc) {
@@ -118,7 +133,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
 
   // Ensure DOM video elements play immediately after React updates src
   useEffect(() => {
-    const isMuted = (currentStep?.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep?.isSpeechStep));
+    const isMuted = isCurrentVideoMuted(currentStep, mode);
     if (videoRef0.current && src0) {
       videoRef0.current.currentTime = 0;
       safePlayVideo(videoRef0.current, isMuted);
@@ -126,7 +141,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
   }, [src0]);
 
   useEffect(() => {
-    const isMuted = (currentStep?.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep?.isSpeechStep));
+    const isMuted = isCurrentVideoMuted(currentStep, mode);
     if (videoRef1.current && src1) {
       videoRef1.current.currentTime = 0;
       safePlayVideo(videoRef1.current, isMuted);
@@ -447,11 +462,10 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
           className={`main-video-player ${activePlayer === 0 ? 'video-active' : 'video-hidden'}`}
           onEnded={handleVideoEnd}
           onPlaying={() => handleVideoPlaying(0)}
-          loop={mode === 'free_choice' || (mode === 'guided_flow' && currentStep.isLoop)}
-          muted={mode === 'free_choice' || (mode === 'guided_flow' && (currentStep.isLoop || currentStep.isSpeechStep))}
+          loop={isCurrentVideoLoop(currentStep, mode)}
+          muted={isCurrentVideoMuted(currentStep, mode)}
           preload="auto"
           playsInline
-          autoPlay
         />
         <video
           ref={videoRef1}
@@ -459,11 +473,10 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
           className={`main-video-player ${activePlayer === 1 ? 'video-active' : 'video-hidden'}`}
           onEnded={handleVideoEnd}
           onPlaying={() => handleVideoPlaying(1)}
-          loop={mode === 'free_choice' || (mode === 'guided_flow' && currentStep.isLoop)}
-          muted={mode === 'free_choice' || (mode === 'guided_flow' && (currentStep.isLoop || currentStep.isSpeechStep))}
+          loop={isCurrentVideoLoop(currentStep, mode)}
+          muted={isCurrentVideoMuted(currentStep, mode)}
           preload="auto"
           playsInline
-          autoPlay
         />
 
         {/* FREE CHOICE OVERVIEW HOTSPOTS OVERLAY */}

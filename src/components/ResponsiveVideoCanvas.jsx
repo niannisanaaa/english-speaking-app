@@ -119,19 +119,9 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
   };
 
   const handleVideoPlaying = (playerIndex) => {
-    const targetSrc = resolveMediaUrl(`/Videos/${currentVideo.name}`);
-    const activeSrc = playerIndex === 0 ? src0 : src1;
-
-    if (activeSrc === targetSrc) {
-      if (playerIndex !== activePlayer) {
-        setActivePlayer(playerIndex);
-        const inactiveRef = playerIndex === 0 ? videoRef1 : videoRef0;
-        if (inactiveRef.current) inactiveRef.current.pause();
-      }
-    } else {
-      // Background player started playing prematurely while pre-buffering -> pause it!
-      const bgRef = playerIndex === 0 ? videoRef0 : videoRef1;
-      if (bgRef.current) bgRef.current.pause();
+    if (playerIndex === activePlayer) {
+      const inactiveRef = playerIndex === 0 ? videoRef1 : videoRef0;
+      if (inactiveRef.current) inactiveRef.current.pause();
     }
   };
 
@@ -140,7 +130,26 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
     hasAdvancedRef.current = true;
 
     if (currentPartIndex < totalParts - 1) {
-      setCurrentPartIndex(prev => prev + 1);
+      const nextIdx = currentPartIndex + 1;
+      const nextVideo = sceneData.videos[nextIdx];
+      const nextSrc = resolveMediaUrl(`/Videos/${nextVideo.name}`);
+      const nextPlayer = 1 - activePlayer;
+
+      if (nextPlayer === 0) {
+        if (src0 !== nextSrc) setSrc0(nextSrc);
+        if (videoRef0.current) {
+          if (videoRef0.current.readyState >= 1) videoRef0.current.currentTime = 0;
+          safePlayVideo(videoRef0.current);
+        }
+      } else {
+        if (src1 !== nextSrc) setSrc1(nextSrc);
+        if (videoRef1.current) {
+          if (videoRef1.current.readyState >= 1) videoRef1.current.currentTime = 0;
+          safePlayVideo(videoRef1.current);
+        }
+      }
+      setActivePlayer(nextPlayer);
+      setCurrentPartIndex(nextIdx);
     } else {
       setIsPlaying(false);
       if (onNextScene) onNextScene();
