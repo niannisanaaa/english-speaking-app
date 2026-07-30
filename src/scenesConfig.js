@@ -85,9 +85,7 @@ export const SCENE_CONFIG = [
             id: 'speak_prompt',
             name: 'scene_02_lion_06_speak_prompt.mp4',
             title: 'Can you say Lion?',
-            isLoop: false,
-            isSpeechStep: true,
-            targetWord: 'lion'
+            isLoop: false
           },
           {
             id: 'speak_loop',
@@ -132,9 +130,7 @@ export const SCENE_CONFIG = [
             id: 'speak_prompt',
             name: 'scene_02_giraffe_06_speak_prompt.mp4',
             title: 'Can you say Giraffe?',
-            isLoop: false,
-            isSpeechStep: true,
-            targetWord: 'giraffe'
+            isLoop: false
           },
           {
             id: 'speak_loop',

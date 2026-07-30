@@ -78,8 +78,8 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
       }, 5000);
     }
 
-    // Step 7 Speech Recognition Trigger
-    if (mode === 'guided_flow' && currentStep.isSpeechStep) {
+    // Speech Recognition Trigger (ONLY activates during video loop in speaking practice!)
+    if (mode === 'guided_flow' && currentStep.isSpeechStep && (currentStep.isLoop || currentStep.id === 'speak_loop')) {
       startSpeechRecognition();
     } else {
       stopSpeechRecognition();
@@ -549,8 +549,8 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
           </div>
         )}
 
-        {/* STEP 7: DYNAMIC VOLUME-REACTIVE 3D MICROPHONE OVERLAY */}
-        {mode === 'guided_flow' && currentStep.isSpeechStep && (
+        {/* STEP 7: DYNAMIC VOLUME-REACTIVE 3D MICROPHONE OVERLAY (ONLY APPEARS DURING SPEAKING VIDEO LOOP!) */}
+        {mode === 'guided_flow' && currentStep.isSpeechStep && (currentStep.isLoop || currentStep.id === 'speak_loop') && (
           <div className="mic-3d-speech-overlay">
             <div className="mic-3d-widget">
               {/* Sonic Water-Ripples (ONLY RUN WHEN VOICE IS DETECTED) */}
