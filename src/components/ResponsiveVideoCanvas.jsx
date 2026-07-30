@@ -41,10 +41,6 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
         }
       } else {
         setSrc1(nextSrc);
-        if (videoRef1.current) {
-          videoRef1.current.currentTime = 0;
-          videoRef1.current.play().catch(() => {});
-        }
       }
     } else {
       if (src1 === nextSrc) {
@@ -54,10 +50,6 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
         }
       } else {
         setSrc0(nextSrc);
-        if (videoRef0.current) {
-          videoRef0.current.currentTime = 0;
-          videoRef0.current.play().catch(() => {});
-        }
       }
     }
 
@@ -66,6 +58,21 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
     setIsPlaying(true);
     setVideoError(false);
   }, [currentPartIndex]);
+
+  // Ensure DOM video elements play immediately after React updates src
+  useEffect(() => {
+    if (videoRef0.current && src0) {
+      videoRef0.current.currentTime = 0;
+      videoRef0.current.play().catch(() => {});
+    }
+  }, [src0]);
+
+  useEffect(() => {
+    if (videoRef1.current && src1) {
+      videoRef1.current.currentTime = 0;
+      videoRef1.current.play().catch(() => {});
+    }
+  }, [src1]);
 
   const handleVideoPlaying = (playerIndex) => {
     if (playerIndex !== activePlayer) {

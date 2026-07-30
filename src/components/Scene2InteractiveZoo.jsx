@@ -88,11 +88,6 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
         }
       } else {
         setSrc1(videoSrc);
-        if (videoRef1.current) {
-          videoRef1.current.currentTime = 0;
-          videoRef1.current.muted = isMuted;
-          videoRef1.current.play().catch(() => {});
-        }
       }
     } else {
       if (src1 === videoSrc) {
@@ -103,14 +98,26 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
         }
       } else {
         setSrc0(videoSrc);
-        if (videoRef0.current) {
-          videoRef0.current.currentTime = 0;
-          videoRef0.current.muted = isMuted;
-          videoRef0.current.play().catch(() => {});
-        }
       }
     }
   }, [videoSrc, stepIndex, mode]);
+
+  // Ensure DOM video elements play immediately after React updates src
+  useEffect(() => {
+    if (videoRef0.current && src0) {
+      videoRef0.current.currentTime = 0;
+      videoRef0.current.muted = (currentStep?.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep?.isSpeechStep));
+      videoRef0.current.play().catch(() => {});
+    }
+  }, [src0]);
+
+  useEffect(() => {
+    if (videoRef1.current && src1) {
+      videoRef1.current.currentTime = 0;
+      videoRef1.current.muted = (currentStep?.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep?.isSpeechStep));
+      videoRef1.current.play().catch(() => {});
+    }
+  }, [src1]);
 
   const handleVideoPlaying = (playerIndex) => {
     if (playerIndex !== activePlayer) {
@@ -485,18 +492,20 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
         {mode === 'guided_flow' && currentStep.isSpeechStep && (
           <div className="mic-3d-speech-overlay">
             <div className="mic-3d-widget">
-              {/* Sonic Water-Ripples ALWAYS PRESENT */}
-              <div 
-                className={`sonic-ripple-container ${audioVolume > 8 ? 'active-voice' : 'idle-voice'}`}
-                style={{
-                  transform: `translate(-50%, -50%) scale(${1 + Math.min(Math.max(audioVolume - 8, 0) / 25, 0.85)})`,
-                  opacity: audioVolume > 8 ? Math.min(0.6 + audioVolume / 50, 0.95) : 0.45
-                }}
-              >
-                <div className="ripple-wave wave-1"></div>
-                <div className="ripple-wave wave-2"></div>
-                <div className="ripple-wave wave-3"></div>
-              </div>
+              {/* Sonic Water-Ripples (ONLY RUN WHEN VOICE IS DETECTED) */}
+              {audioVolume > 8 && (
+                <div 
+                  className="sonic-ripple-container active-voice"
+                  style={{
+                    transform: `translate(-50%, -50%) scale(${1 + Math.min(Math.max(audioVolume - 8, 0) / 25, 0.85)})`,
+                    opacity: Math.min(0.6 + audioVolume / 50, 0.95)
+                  }}
+                >
+                  <div className="ripple-wave wave-1"></div>
+                  <div className="ripple-wave wave-2"></div>
+                  <div className="ripple-wave wave-3"></div>
+                </div>
+              )}
 
               {/* Sporadic Stars Encircling the Microphone (ONLY APPEAR WHEN VOICE IS DETECTED) */}
               {audioVolume > 8 && (
