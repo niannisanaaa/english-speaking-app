@@ -36,7 +36,9 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
     if (activePlayer === 0) {
       if (src0 === nextSrc) {
         if (videoRef0.current) {
-          videoRef0.current.currentTime = 0;
+          if (videoRef0.current.readyState >= 1) {
+            videoRef0.current.currentTime = 0;
+          }
           videoRef0.current.play().catch(() => {});
         }
       } else {
@@ -45,7 +47,9 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
     } else {
       if (src1 === nextSrc) {
         if (videoRef1.current) {
-          videoRef1.current.currentTime = 0;
+          if (videoRef1.current.readyState >= 1) {
+            videoRef1.current.currentTime = 0;
+          }
           videoRef1.current.play().catch(() => {});
         }
       } else {
@@ -62,17 +66,30 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
   // Ensure DOM video elements play immediately after React updates src
   useEffect(() => {
     if (videoRef0.current && src0) {
-      videoRef0.current.currentTime = 0;
+      if (videoRef0.current.readyState >= 1) {
+        videoRef0.current.currentTime = 0;
+      }
       videoRef0.current.play().catch(() => {});
     }
   }, [src0]);
 
   useEffect(() => {
     if (videoRef1.current && src1) {
-      videoRef1.current.currentTime = 0;
+      if (videoRef1.current.readyState >= 1) {
+        videoRef1.current.currentTime = 0;
+      }
       videoRef1.current.play().catch(() => {});
     }
   }, [src1]);
+
+  const handleCanPlay = (playerIdx) => {
+    if (playerIdx === activePlayer && isPlaying) {
+      const videoEl = playerIdx === 0 ? videoRef0.current : videoRef1.current;
+      if (videoEl && videoEl.paused) {
+        videoEl.play().catch(() => {});
+      }
+    }
+  };
 
   const handleVideoPlaying = (playerIndex) => {
     if (playerIndex !== activePlayer) {
@@ -199,6 +216,8 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
               className={`main-video-player ${activePlayer === 0 ? 'video-active' : 'video-hidden'}`}
               onEnded={handleVideoEnd}
               onPlaying={() => handleVideoPlaying(0)}
+              onCanPlay={() => handleCanPlay(0)}
+              onLoadedMetadata={() => handleCanPlay(0)}
               onTimeUpdate={handleTimeUpdate}
               onError={handleVideoError}
               preload="auto"
@@ -211,6 +230,8 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
               className={`main-video-player ${activePlayer === 1 ? 'video-active' : 'video-hidden'}`}
               onEnded={handleVideoEnd}
               onPlaying={() => handleVideoPlaying(1)}
+              onCanPlay={() => handleCanPlay(1)}
+              onLoadedMetadata={() => handleCanPlay(1)}
               onTimeUpdate={handleTimeUpdate}
               onError={handleVideoError}
               preload="auto"

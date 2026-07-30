@@ -242,9 +242,6 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
                     onClick={() => handleCardClick(card.id)}
                     title={`Tap to select ${card.name}!`}
                   >
-                    {/* Top Pill Badge */}
-                    <div className="card-top-badge" />
-
                     {/* 3D Character Image */}
                     <div className="card-image-wrapper">
                       <img src={card.image} alt={card.name} className="card-3d-img" />

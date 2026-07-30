@@ -17,7 +17,6 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
   const speechSuccessRef = useRef(false);
   const [micSupported, setMicSupported] = useState(true);
 
-  const videoRef = useRef(null);
   const recognitionRef = useRef(null);
 
   const activeAnimal = sceneData.animals[currentAnimalId] || sceneData.animals.lion;
@@ -139,9 +138,16 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
   const startSpeechRecognition = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    // Start Web Audio API Analyzer for real-time reactive pulse
+    // Start Web Audio API Analyzer for real-time reactive pulse with Noise Cancellation
     if (navigator.mediaDevices?.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1
+        }
+      }).then((stream) => {
         micStreamRef.current = stream;
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const audioCtx = new AudioContext();
@@ -304,18 +310,22 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
 
     // 2. Free Choice Overview Video Loop -> Keep Looping
     if (mode === 'free_choice') {
-      if (videoRef.current) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.play().catch(() => {});
+      const activeVideo = activePlayer === 0 ? videoRef0.current : videoRef1.current;
+      if (activeVideo) {
+        activeVideo.currentTime = 0;
+        activeVideo.muted = true;
+        activeVideo.play().catch(() => {});
       }
       return;
     }
 
     // 3. Guided Flow Step Video Loop -> Keep Looping
     if (mode === 'guided_flow' && currentStep.isLoop) {
-      if (videoRef.current) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.play().catch(() => {});
+      const activeVideo = activePlayer === 0 ? videoRef0.current : videoRef1.current;
+      if (activeVideo) {
+        activeVideo.currentTime = 0;
+        activeVideo.muted = true;
+        activeVideo.play().catch(() => {});
       }
       return;
     }
@@ -403,6 +413,8 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
           className={`main-video-player ${activePlayer === 0 ? 'video-active' : 'video-hidden'}`}
           onEnded={handleVideoEnd}
           onPlaying={() => handleVideoPlaying(0)}
+          loop={mode === 'free_choice' || (mode === 'guided_flow' && currentStep.isLoop)}
+          muted={mode === 'free_choice' || (mode === 'guided_flow' && (currentStep.isLoop || currentStep.isSpeechStep))}
           preload="auto"
           playsInline
           autoPlay
@@ -413,6 +425,8 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
           className={`main-video-player ${activePlayer === 1 ? 'video-active' : 'video-hidden'}`}
           onEnded={handleVideoEnd}
           onPlaying={() => handleVideoPlaying(1)}
+          loop={mode === 'free_choice' || (mode === 'guided_flow' && currentStep.isLoop)}
+          muted={mode === 'free_choice' || (mode === 'guided_flow' && (currentStep.isLoop || currentStep.isSpeechStep))}
           preload="auto"
           playsInline
           autoPlay
