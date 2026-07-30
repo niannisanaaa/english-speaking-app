@@ -219,6 +219,9 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
             cleanText.includes('jerap') ||
             cleanText.includes('jrap') ||
             words.some(w => 
+              (w.startsWith('g') && w.length >= 2) || 
+              (w.startsWith('j') && w.length >= 2) || 
+              (w.startsWith('r') && w.length >= 2) || 
               w.startsWith('gi') || 
               w.startsWith('ji') || 
               w.startsWith('je') || 
@@ -228,7 +231,8 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
               w.startsWith('ch') ||
               w.includes('raf') ||
               w.includes('ffe') ||
-              w.includes('rapah')
+              w.includes('rapah') ||
+              w.includes('ir')
             );
         } else {
           isMatch = 

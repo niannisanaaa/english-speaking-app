@@ -28,6 +28,26 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
 
   const hasAdvancedRef = useRef(false);
 
+  // Bulletproof video player trigger with browser gesture fallback strategy
+  const safePlayVideo = (videoEl) => {
+    if (!videoEl) return;
+    videoEl.muted = isMuted;
+    videoEl.play().catch(err => {
+      console.warn("Unmuted autoplay restricted by browser, fallback to muted autoplay:", err);
+      videoEl.muted = true;
+      videoEl.play().then(() => {
+        // Automatically attempt unmuting after playback starts
+        setTimeout(() => {
+          if (videoEl && !isMuted) {
+            videoEl.muted = false;
+          }
+        }, 200);
+      }).catch(e => {
+        console.warn("Muted autoplay also failed:", e);
+      });
+    });
+  };
+
   // Pre-buffer next video and switch seamlessly
   useEffect(() => {
     hasAdvancedRef.current = false;
@@ -39,7 +59,7 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
           if (videoRef0.current.readyState >= 1) {
             videoRef0.current.currentTime = 0;
           }
-          videoRef0.current.play().catch(() => {});
+          safePlayVideo(videoRef0.current);
         }
       } else {
         setSrc1(nextSrc);
@@ -50,7 +70,7 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
           if (videoRef1.current.readyState >= 1) {
             videoRef1.current.currentTime = 0;
           }
-          videoRef1.current.play().catch(() => {});
+          safePlayVideo(videoRef1.current);
         }
       } else {
         setSrc0(nextSrc);
@@ -63,13 +83,13 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
     setVideoError(false);
   }, [currentPartIndex]);
 
-  // Ensure DOM video elements play immediately after React updates src
+  // Initial mount & src change play triggers
   useEffect(() => {
     if (videoRef0.current && src0) {
       if (videoRef0.current.readyState >= 1) {
         videoRef0.current.currentTime = 0;
       }
-      videoRef0.current.play().catch(() => {});
+      safePlayVideo(videoRef0.current);
     }
   }, [src0]);
 
@@ -78,15 +98,22 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
       if (videoRef1.current.readyState >= 1) {
         videoRef1.current.currentTime = 0;
       }
-      videoRef1.current.play().catch(() => {});
+      safePlayVideo(videoRef1.current);
     }
   }, [src1]);
 
+  useEffect(() => {
+    const activeEl = activePlayer === 0 ? videoRef0.current : videoRef1.current;
+    if (activeEl && activeEl.paused) {
+      safePlayVideo(activeEl);
+    }
+  }, [activePlayer]);
+
   const handleCanPlay = (playerIdx) => {
-    if (playerIdx === activePlayer && isPlaying) {
+    if (playerIdx === activePlayer) {
       const videoEl = playerIdx === 0 ? videoRef0.current : videoRef1.current;
       if (videoEl && videoEl.paused) {
-        videoEl.play().catch(() => {});
+        safePlayVideo(videoEl);
       }
     }
   };

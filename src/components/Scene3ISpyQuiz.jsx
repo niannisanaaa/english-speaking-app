@@ -138,10 +138,21 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
     }
   }, [src1]);
 
+  useEffect(() => {
+    const activeEl = activePlayer === 0 ? videoRef0.current : videoRef1.current;
+    if (activeEl && activeEl.paused) {
+      activeEl.muted = (quizState === 'waiting_loop');
+      activeEl.play().catch(() => {});
+    }
+  }, [activePlayer]);
+
   const handleCanPlay = (playerIdx) => {
-    const videoEl = playerIdx === 0 ? videoRef0.current : videoRef1.current;
-    if (videoEl && videoEl.paused) {
-      videoEl.play().catch(() => {});
+    if (playerIdx === activePlayer) {
+      const videoEl = playerIdx === 0 ? videoRef0.current : videoRef1.current;
+      if (videoEl && videoEl.paused) {
+        videoEl.muted = (quizState === 'waiting_loop');
+        videoEl.play().catch(e => console.warn('Scene 3 play retry:', e));
+      }
     }
   };
 
