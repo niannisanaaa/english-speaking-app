@@ -46,6 +46,23 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
   const [src0, setSrc0] = useState(videoSrc);
   const [src1, setSrc1] = useState('');
 
+  // Bulletproof video playback with unmuted-to-muted fallback strategy
+  const safePlayVideo = (videoEl, isMutedGoal) => {
+    if (!videoEl) return;
+    videoEl.muted = isMutedGoal;
+    videoEl.play().catch(err => {
+      console.warn("Scene 2 unmuted autoplay restricted, fallback to muted:", err);
+      videoEl.muted = true;
+      videoEl.play().then(() => {
+        setTimeout(() => {
+          if (videoEl && !isMutedGoal) {
+            videoEl.muted = false;
+          }
+        }, 200);
+      }).catch(e => console.warn("Scene 2 muted play failed:", e));
+    });
+  };
+
   // Reset states when step, animal, or mode changes
   useEffect(() => {
     setShowCoachmark(false);
@@ -82,8 +99,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
       if (src0 === videoSrc) {
         if (videoRef0.current) {
           videoRef0.current.currentTime = 0;
-          videoRef0.current.muted = isMuted;
-          videoRef0.current.play().catch(() => {});
+          safePlayVideo(videoRef0.current, isMuted);
         }
       } else {
         setSrc1(videoSrc);
@@ -92,8 +108,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
       if (src1 === videoSrc) {
         if (videoRef1.current) {
           videoRef1.current.currentTime = 0;
-          videoRef1.current.muted = isMuted;
-          videoRef1.current.play().catch(() => {});
+          safePlayVideo(videoRef1.current, isMuted);
         }
       } else {
         setSrc0(videoSrc);
@@ -103,29 +118,26 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
 
   // Ensure DOM video elements play immediately after React updates src
   useEffect(() => {
+    const isMuted = (currentStep?.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep?.isSpeechStep));
     if (videoRef0.current && src0) {
       videoRef0.current.currentTime = 0;
-      videoRef0.current.muted = (currentStep?.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep?.isSpeechStep));
-      videoRef0.current.play().catch(() => {});
+      safePlayVideo(videoRef0.current, isMuted);
     }
   }, [src0]);
 
   useEffect(() => {
+    const isMuted = (currentStep?.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep?.isSpeechStep));
     if (videoRef1.current && src1) {
       videoRef1.current.currentTime = 0;
-      videoRef1.current.muted = (currentStep?.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep?.isSpeechStep));
-      videoRef1.current.play().catch(() => {});
+      safePlayVideo(videoRef1.current, isMuted);
     }
   }, [src1]);
 
   const handleVideoPlaying = (playerIndex) => {
     if (playerIndex !== activePlayer) {
       setActivePlayer(playerIndex);
-      if (playerIndex === 0 && videoRef1.current) {
-        videoRef1.current.pause();
-      } else if (playerIndex === 1 && videoRef0.current) {
-        videoRef0.current.pause();
-      }
+      const inactiveRef = playerIndex === 0 ? videoRef1 : videoRef0;
+      if (inactiveRef.current) inactiveRef.current.pause();
     }
   };
 
@@ -301,6 +313,24 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
     // Instant transition to Speech Success Video (Last step of current animal)
     const successStepIdx = activeAnimal.steps.findIndex(s => s.id === 'speech_success');
     if (successStepIdx !== -1) {
+      const targetStep = activeAnimal.steps[successStepIdx];
+      const targetSrc = resolveMediaUrl(`/Videos/${targetStep.name}`);
+      
+      const nextPlayer = 1 - activePlayer;
+      if (nextPlayer === 0) {
+        setSrc0(targetSrc);
+        if (videoRef0.current) {
+          videoRef0.current.currentTime = 0;
+          safePlayVideo(videoRef0.current, false);
+        }
+      } else {
+        setSrc1(targetSrc);
+        if (videoRef1.current) {
+          videoRef1.current.currentTime = 0;
+          safePlayVideo(videoRef1.current, false);
+        }
+      }
+      setActivePlayer(nextPlayer);
       setStepIndex(successStepIdx);
     }
   };

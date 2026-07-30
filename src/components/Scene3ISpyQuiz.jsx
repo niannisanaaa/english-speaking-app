@@ -88,16 +88,33 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
   const [src0, setSrc0] = useState(() => getVideoSrc());
   const [src1, setSrc1] = useState('');
 
+  // Bulletproof video player trigger with browser gesture fallback strategy
+  const safePlayVideo = (videoEl, isMutedGoal) => {
+    if (!videoEl) return;
+    videoEl.muted = isMutedGoal;
+    videoEl.play().catch(err => {
+      console.warn("Scene 3 unmuted autoplay restricted, fallback to muted autoplay:", err);
+      videoEl.muted = true;
+      videoEl.play().then(() => {
+        setTimeout(() => {
+          if (videoEl && !isMutedGoal) {
+            videoEl.muted = false;
+          }
+        }, 200);
+      }).catch(e => console.warn("Scene 3 muted play failed:", e));
+    });
+  };
+
   // Dual Video Switcher - Pre-buffers & switches with 0ms gap
   useEffect(() => {
+    const isMutedGoal = (quizState === 'waiting_loop');
     if (activePlayer === 0) {
       if (src0 === videoSrc) {
         if (videoRef0.current) {
           if (videoRef0.current.readyState >= 1) {
             videoRef0.current.currentTime = 0;
           }
-          videoRef0.current.muted = (quizState === 'waiting_loop');
-          videoRef0.current.play().catch(() => {});
+          safePlayVideo(videoRef0.current, isMutedGoal);
         }
       } else {
         setSrc1(videoSrc);
@@ -108,8 +125,7 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
           if (videoRef1.current.readyState >= 1) {
             videoRef1.current.currentTime = 0;
           }
-          videoRef1.current.muted = (quizState === 'waiting_loop');
-          videoRef1.current.play().catch(() => {});
+          safePlayVideo(videoRef1.current, isMutedGoal);
         }
       } else {
         setSrc0(videoSrc);
@@ -119,30 +135,30 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
 
   // Ensure DOM video elements play immediately after React updates src
   useEffect(() => {
+    const isMutedGoal = (quizState === 'waiting_loop');
     if (videoRef0.current && src0) {
       if (videoRef0.current.readyState >= 1) {
         videoRef0.current.currentTime = 0;
       }
-      videoRef0.current.muted = (quizState === 'waiting_loop');
-      videoRef0.current.play().catch(() => {});
+      safePlayVideo(videoRef0.current, isMutedGoal);
     }
   }, [src0]);
 
   useEffect(() => {
+    const isMutedGoal = (quizState === 'waiting_loop');
     if (videoRef1.current && src1) {
       if (videoRef1.current.readyState >= 1) {
         videoRef1.current.currentTime = 0;
       }
-      videoRef1.current.muted = (quizState === 'waiting_loop');
-      videoRef1.current.play().catch(() => {});
+      safePlayVideo(videoRef1.current, isMutedGoal);
     }
   }, [src1]);
 
   useEffect(() => {
+    const isMutedGoal = (quizState === 'waiting_loop');
     const activeEl = activePlayer === 0 ? videoRef0.current : videoRef1.current;
     if (activeEl && activeEl.paused) {
-      activeEl.muted = (quizState === 'waiting_loop');
-      activeEl.play().catch(() => {});
+      safePlayVideo(activeEl, isMutedGoal);
     }
   }, [activePlayer]);
 
@@ -150,20 +166,23 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
     if (playerIdx === activePlayer) {
       const videoEl = playerIdx === 0 ? videoRef0.current : videoRef1.current;
       if (videoEl && videoEl.paused) {
-        videoEl.muted = (quizState === 'waiting_loop');
-        videoEl.play().catch(e => console.warn('Scene 3 play retry:', e));
+        const isMutedGoal = (quizState === 'waiting_loop');
+        safePlayVideo(videoEl, isMutedGoal);
       }
     }
   };
 
   const handleVideoPlaying = (playerIndex) => {
-    if (playerIndex !== activePlayer) {
-      setActivePlayer(playerIndex);
-      if (playerIndex === 0 && videoRef1.current) {
-        videoRef1.current.pause();
-      } else if (playerIndex === 1 && videoRef0.current) {
-        videoRef0.current.pause();
+    const activeSrc = playerIndex === 0 ? src0 : src1;
+    if (activeSrc === videoSrc) {
+      if (playerIndex !== activePlayer) {
+        setActivePlayer(playerIndex);
+        const inactiveRef = playerIndex === 0 ? videoRef1 : videoRef0;
+        if (inactiveRef.current) inactiveRef.current.pause();
       }
+    } else {
+      const bgRef = playerIndex === 0 ? videoRef0 : videoRef1;
+      if (bgRef.current) bgRef.current.pause();
     }
   };
 
@@ -290,12 +309,13 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
           onEnded={handleVideoEnd}
           onPlaying={() => handleVideoPlaying(0)}
           onCanPlay={() => handleCanPlay(0)}
+          onCanPlayThrough={() => handleCanPlay(0)}
+          onLoadedData={() => handleCanPlay(0)}
           onLoadedMetadata={() => handleCanPlay(0)}
           loop={quizState === 'waiting_loop'}
           muted={quizState === 'waiting_loop'}
           preload="auto"
           playsInline
-          autoPlay
         />
         <video
           ref={videoRef1}
@@ -304,12 +324,13 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
           onEnded={handleVideoEnd}
           onPlaying={() => handleVideoPlaying(1)}
           onCanPlay={() => handleCanPlay(1)}
+          onCanPlayThrough={() => handleCanPlay(1)}
+          onLoadedData={() => handleCanPlay(1)}
           onLoadedMetadata={() => handleCanPlay(1)}
           loop={quizState === 'waiting_loop'}
           muted={quizState === 'waiting_loop'}
           preload="auto"
           playsInline
-          autoPlay
         />
 
         {/* REPEAT QUESTION BADGE ICON NEAR MISS SOPHIE (Sesuai Referensi Gambar) */}

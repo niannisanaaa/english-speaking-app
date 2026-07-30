@@ -119,13 +119,19 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
   };
 
   const handleVideoPlaying = (playerIndex) => {
-    if (playerIndex !== activePlayer) {
-      setActivePlayer(playerIndex);
-      if (playerIndex === 0 && videoRef1.current) {
-        videoRef1.current.pause();
-      } else if (playerIndex === 1 && videoRef0.current) {
-        videoRef0.current.pause();
+    const targetSrc = resolveMediaUrl(`/Videos/${currentVideo.name}`);
+    const activeSrc = playerIndex === 0 ? src0 : src1;
+
+    if (activeSrc === targetSrc) {
+      if (playerIndex !== activePlayer) {
+        setActivePlayer(playerIndex);
+        const inactiveRef = playerIndex === 0 ? videoRef1 : videoRef0;
+        if (inactiveRef.current) inactiveRef.current.pause();
       }
+    } else {
+      // Background player started playing prematurely while pre-buffering -> pause it!
+      const bgRef = playerIndex === 0 ? videoRef0 : videoRef1;
+      if (bgRef.current) bgRef.current.pause();
     }
   };
 
@@ -244,12 +250,13 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
               onEnded={handleVideoEnd}
               onPlaying={() => handleVideoPlaying(0)}
               onCanPlay={() => handleCanPlay(0)}
+              onCanPlayThrough={() => handleCanPlay(0)}
+              onLoadedData={() => handleCanPlay(0)}
               onLoadedMetadata={() => handleCanPlay(0)}
               onTimeUpdate={handleTimeUpdate}
               onError={handleVideoError}
               preload="auto"
               playsInline
-              autoPlay
             />
             <video
               ref={videoRef1}
@@ -258,12 +265,13 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
               onEnded={handleVideoEnd}
               onPlaying={() => handleVideoPlaying(1)}
               onCanPlay={() => handleCanPlay(1)}
+              onCanPlayThrough={() => handleCanPlay(1)}
+              onLoadedData={() => handleCanPlay(1)}
               onLoadedMetadata={() => handleCanPlay(1)}
               onTimeUpdate={handleTimeUpdate}
               onError={handleVideoError}
               preload="auto"
               playsInline
-              autoPlay
             />
           </>
         )}
