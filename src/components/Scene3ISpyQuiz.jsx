@@ -170,6 +170,11 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
     setQuizState('prompt');
   };
 
+  const handleRepeatQuestion = () => {
+    playTapChime();
+    setQuizState('prompt');
+  };
+
   return (
     <div className="scene3-wrapper">
       {/* Header Navigation */}
@@ -204,10 +209,22 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
           src={videoSrc}
           className="main-video-player"
           onEnded={handleVideoEnd}
+          muted={quizState === 'waiting_loop'}
           preload="auto"
           playsInline
           autoPlay
         />
+
+        {/* REPEAT QUESTION BADGE ICON NEAR MISS SOPHIE (Sesuai Referensi Gambar) */}
+        {(quizState === 'waiting_loop' || quizState === 'milo_tap') && (
+          <div 
+            className="repeat-question-btn" 
+            onClick={handleRepeatQuestion}
+            title="Repeat Question Prompt"
+          >
+            <img src="/images/question.png" alt="Repeat Question" className="question-icon-img" />
+          </div>
+        )}
 
         {/* INTERACTIVE 3D CARDS OVERLAY (MATCHES REFERENCE SCREENSHOT LAYOUT) */}
         {cardsVisible && (

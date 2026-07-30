@@ -248,6 +248,40 @@
   transition: all 0.25s ease;
 }
 
+/* FULLSCREEN CENTERING FIX FOR ALL SCENES */
+.app-container.fullscreen-mode {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: 100vw !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  background: #090d16 !important;
+}
+
+.app-container.fullscreen-mode .main-content {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.app-container.fullscreen-mode .scene3-wrapper,
+.app-container.fullscreen-mode .canvas-wrapper,
+.app-container.fullscreen-mode .scene2-wrapper {
+  max-width: 100vw !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
 .exit-fullscreen-floating-btn:hover {
   background: rgba(239, 68, 68, 0.85);
   border-color: rgba(239, 68, 68, 1);

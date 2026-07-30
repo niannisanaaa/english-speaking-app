@@ -61,7 +61,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
         setSrc1(videoSrc);
         if (videoRef1.current) {
           videoRef1.current.currentTime = 0;
-          videoRef1.current.muted = (mode === 'guided_flow' && currentStep.isSpeechStep);
+          videoRef1.current.muted = (currentStep.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep.isSpeechStep));
           videoRef1.current.play().catch(() => {});
         }
       }
@@ -70,7 +70,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
         setSrc0(videoSrc);
         if (videoRef0.current) {
           videoRef0.current.currentTime = 0;
-          videoRef0.current.muted = (mode === 'guided_flow' && currentStep.isSpeechStep);
+          videoRef0.current.muted = (currentStep.isLoop || mode === 'free_choice' || (mode === 'guided_flow' && currentStep.isSpeechStep));
           videoRef0.current.play().catch(() => {});
         }
       }
