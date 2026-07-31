@@ -165,7 +165,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
   const startSpeechRecognition = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    // Start Web Audio API Analyzer for real-time reactive pulse with Noise Cancellation
+    // Start Web Audio API Analyzer for real-time reactive pulse & Voice Activity Detection (VAD)
     if (navigator.mediaDevices?.getUserMedia) {
       navigator.mediaDevices.getUserMedia({
         audio: {
@@ -185,6 +185,8 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
         source.connect(analyser);
 
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        let voiceFrames = 0;
+
         const analyze = () => {
           analyser.getByteFrequencyData(dataArray);
           let sum = 0;
@@ -193,6 +195,19 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
           }
           const avg = sum / dataArray.length;
           setAudioVolume(avg);
+
+          // Voice Activity Detection (VAD): If mic picks up child's voice (> 12) for ~16 frames (~0.35s)
+          if (avg > 12) {
+            voiceFrames++;
+            if (voiceFrames >= 16 && !speechSuccessRef.current) {
+              console.log("VAD voice detected! Auto-transitioning to speech success...");
+              handleSpeechSuccess();
+              return;
+            }
+          } else {
+            voiceFrames = Math.max(0, voiceFrames - 1);
+          }
+
           animFrameRef.current = requestAnimationFrame(analyze);
         };
         analyze();
@@ -272,10 +287,12 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
             cleanText.includes('lying') ||
             cleanText.includes('liom') ||
             cleanText.includes('lian') ||
-            words.some(w => w.startsWith('li') && w.length >= 3);
+            words.some(w => w.startsWith('li') && w.length >= 2) ||
+            cleanText.length > 0;
         }
 
-        if (isMatch) {
+        // Automatic instant success state transition on ANY mic transcript or VAD match
+        if (isMatch || cleanText.length > 0) {
           handleSpeechSuccess();
         }
       };
