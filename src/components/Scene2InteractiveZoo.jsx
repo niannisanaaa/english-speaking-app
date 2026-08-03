@@ -196,11 +196,11 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
           const avg = sum / dataArray.length;
           setAudioVolume(avg);
 
-          // Voice Activity Detection (VAD): If mic picks up child's voice (> 12) for ~16 frames (~0.35s)
-          if (avg > 12) {
+          // Voice Activity Detection (VAD): Only trigger fallback if child speaks loudly into mic (> 35) for ~45 frames (~1 sec)
+          if (avg > 35) {
             voiceFrames++;
-            if (voiceFrames >= 16 && !speechSuccessRef.current) {
-              console.log("VAD voice detected! Auto-transitioning to speech success...");
+            if (voiceFrames >= 45 && !speechSuccessRef.current) {
+              console.log("Sustained loud voice input detected (>35 volume). Triggering speech success...");
               handleSpeechSuccess();
               return;
             }
@@ -287,12 +287,11 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
             cleanText.includes('lying') ||
             cleanText.includes('liom') ||
             cleanText.includes('lian') ||
-            words.some(w => w.startsWith('li') && w.length >= 2) ||
-            cleanText.length > 0;
+            words.some(w => (w.startsWith('li') || w.startsWith('ly') || w.startsWith('la')) && w.length >= 2);
         }
 
-        // Automatic instant success state transition on ANY mic transcript or VAD match
-        if (isMatch || cleanText.length > 0) {
+        // Only transition to success state when target word pronunciation match is confirmed!
+        if (isMatch) {
           handleSpeechSuccess();
         }
       };
