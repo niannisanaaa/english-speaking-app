@@ -13,6 +13,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
   const videoRef0 = useRef(null);
   const videoRef1 = useRef(null);
   const audioRef = useRef(null);
+  const playedAudioStepRef = useRef(-1);
 
   const audioCtxRef = useRef(null);
   const animFrameRef = useRef(null);
@@ -36,6 +37,17 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
   });
   const [src1, setSrc1] = useState('');
 
+  // Helper to destroy audio completely and prevent duplicate firings
+  const destroyAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.onended = null;
+      audioRef.current.onerror = null;
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+  };
+
   // Safe Video Player Trigger
   const safePlayVideo = (videoEl) => {
     if (!videoEl) return;
@@ -45,7 +57,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
     });
   };
 
-  // Switch video src dynamically between talk and idle + 5s speaking limit
+  // Switch video src dynamically between talk and idle + audio manager + 5s speaking limit
   useEffect(() => {
     speechSuccessRef.current = false;
     setSpokenText('');
@@ -84,29 +96,36 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
       }
     }
 
-    // Audio Playback for Milo Talking Steps
+    // Audio Playback for Milo Talking Steps (Single Instance Guaranteed)
     if (isTalk && currentStep.audio) {
-      const audioUrl = resolveMediaUrl(`/Audio/${currentStep.audio}`);
-      if (audioRef.current) {
-        audioRef.current.pause();
+      // Only play audio once per stepIndex to prevent duplicate triggers
+      if (playedAudioStepRef.current !== stepIndex) {
+        playedAudioStepRef.current = stepIndex;
+        destroyAudio();
+
+        const audioUrl = resolveMediaUrl(`/Audio/${currentStep.audio}`);
+        const audio = new Audio(audioUrl);
+        audioRef.current = audio;
+
+        audio.onended = () => {
+          audio.onended = null;
+          console.log(`Step ${stepIndex} audio completed 100%. Advancing step...`);
+          destroyAudio();
+
+          setStepIndex(current => {
+            if (current === stepIndex && current < totalSteps - 1) {
+              return current + 1;
+            }
+            return current;
+          });
+        };
+
+        audio.play().catch(err => {
+          console.warn("Milo audio play restricted:", err);
+        });
       }
-      const audio = new Audio(audioUrl);
-      audioRef.current = audio;
-
-      audio.onended = () => {
-        // Auto-advance to next step when Milo finishes talking!
-        if (stepIndex < totalSteps - 1) {
-          setStepIndex(prev => prev + 1);
-        }
-      };
-
-      audio.play().catch(err => {
-        console.warn("Milo audio play restricted, fallback to user gesture:", err);
-      });
     } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
+      destroyAudio();
     }
 
     // Speech Recognition for User Speaking Steps + Max 5 Seconds Limit
@@ -124,9 +143,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
 
     return () => {
       if (timeoutTimer) clearTimeout(timeoutTimer);
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
+      destroyAudio();
       stopSpeechRecognition();
     };
   }, [stepIndex]);
