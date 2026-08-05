@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { SCENE_CONFIG } from './scenesConfig';
 import ResponsiveVideoCanvas from './components/ResponsiveVideoCanvas';
 import Scene2InteractiveZoo from './components/Scene2InteractiveZoo';
+import Scene3ISpyQuiz from './components/Scene3ISpyQuiz';
+import Scene51on1Practice from './components/Scene51on1Practice';
 import { Sparkles, MapPin, Maximize2, Minimize2, X, Zap, HardDrive, Wifi } from 'lucide-react';
 import './App.css';
-
-import Scene3ISpyQuiz from './components/Scene3ISpyQuiz';
 
 export default function App() {
   const [currentSceneIdx, setCurrentSceneIdx] = useState(0);
@@ -70,7 +70,15 @@ export default function App() {
       '/Videos/scene_03_ispy_loop_waiting_click.mp4',
       '/Videos/scene_03_ispy_milo_tap_prompt.mp4',
       '/Videos/scene_03_ispy_feedback_correct.mp4',
-      '/Videos/scene_03_ispy_feedback_wrong.mp4'
+      '/Videos/scene_03_ispy_feedback_wrong.mp4',
+
+      // Scene 5 1-on-1 Milo Practice Videos & Audios
+      '/Videos/scene_05_milo intro.mp4',
+      '/Videos/scene_05_milo idle.mp4',
+      '/Videos/scene_05_milo talk.mp4',
+      '/Audio/scene_05_milo intro.mp3',
+      '/Audio/scene_05_milo answer 1.mp3',
+      '/Audio/scene_05_milo answer 2.mp3'
     ];
 
     let totalDownloaded = 0;
@@ -358,6 +366,14 @@ export default function App() {
             />
           ) : activeScene.type === 'quiz' ? (
             <Scene3ISpyQuiz
+              sceneData={activeScene}
+              onNextScene={handleNextScene}
+              onPrevScene={handlePrevScene}
+              hasPrevScene={currentSceneIdx > 0}
+              hasNextScene={currentSceneIdx < SCENE_CONFIG.length - 1}
+            />
+          ) : activeScene.type === 'milo_1on1' ? (
+            <Scene51on1Practice
               sceneData={activeScene}
               onNextScene={handleNextScene}
               onPrevScene={handlePrevScene}

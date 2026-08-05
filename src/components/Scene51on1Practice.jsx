@@ -1,0 +1,366 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight, Sparkles, Volume2, VolumeX, Mic } from 'lucide-react';
+import { playSuccessChime, playTapChime } from '../utils/soundEffects';
+import './Scene51on1Practice.css';
+
+export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene, hasPrevScene, hasNextScene }) {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [spokenText, setSpokenText] = useState('');
+  const [audioVolume, setAudioVolume] = useState(0);
+  const [micSupported, setMicSupported] = useState(true);
+  const [isListening, setIsListening] = useState(false);
+
+  const videoRef0 = useRef(null);
+  const videoRef1 = useRef(null);
+  const audioRef = useRef(null);
+
+  const audioCtxRef = useRef(null);
+  const animFrameRef = useRef(null);
+  const micStreamRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const speechSuccessRef = useRef(false);
+
+  const steps = sceneData.steps;
+  const currentStep = steps[stepIndex] || steps[0];
+  const totalSteps = steps.length;
+
+  const resolveMediaUrl = (path) => {
+    return window.__zooBlobUrls?.[path] || path;
+  };
+
+  const [activePlayer, setActivePlayer] = useState(0);
+  const [src0, setSrc0] = useState(() => {
+    const isTalk = currentStep.type === 'milo_talking';
+    const videoName = isTalk ? sceneData.talkVideo : sceneData.idleVideo;
+    return resolveMediaUrl(`/Videos/${videoName}`);
+  });
+  const [src1, setSrc1] = useState('');
+
+  // Safe Video Player Trigger
+  const safePlayVideo = (videoEl) => {
+    if (!videoEl) return;
+    videoEl.muted = true; // Video is always muted because audio tracks are played via Audio element
+    videoEl.play().catch(err => {
+      console.warn("Scene 5 video play failed:", err);
+    });
+  };
+
+  // Switch video src dynamically between talk and idle
+  useEffect(() => {
+    speechSuccessRef.current = false;
+    setSpokenText('');
+
+    const isTalk = currentStep.type === 'milo_talking';
+    const targetVideoName = isTalk ? sceneData.talkVideo : sceneData.idleVideo;
+    const targetSrc = resolveMediaUrl(`/Videos/${targetVideoName}`);
+
+    if (activePlayer === 0) {
+      if (src0 === targetSrc) {
+        if (videoRef0.current) {
+          if (videoRef0.current.readyState >= 1) videoRef0.current.currentTime = 0;
+          safePlayVideo(videoRef0.current);
+        }
+      } else {
+        setSrc1(targetSrc);
+      }
+    } else {
+      if (src1 === targetSrc) {
+        if (videoRef1.current) {
+          if (videoRef1.current.readyState >= 1) videoRef1.current.currentTime = 0;
+          safePlayVideo(videoRef1.current);
+        }
+      } else {
+        setSrc0(targetSrc);
+      }
+    }
+
+    // Audio Playback for Milo Talking Steps
+    if (isTalk && currentStep.audio) {
+      const audioUrl = resolveMediaUrl(`/Audio/${currentStep.audio}`);
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onended = () => {
+        // Auto-advance to next step when Milo finishes talking!
+        if (stepIndex < totalSteps - 1) {
+          setStepIndex(prev => prev + 1);
+        }
+      };
+
+      audio.play().catch(err => {
+        console.warn("Milo audio play restricted, fallback to user gesture:", err);
+      });
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    }
+
+    // Speech Recognition for User Speaking Steps
+    if (currentStep.type === 'user_speaking') {
+      startSpeechRecognition();
+    } else {
+      stopSpeechRecognition();
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      stopSpeechRecognition();
+    };
+  }, [stepIndex]);
+
+  // Ensure DOM video elements play immediately after React updates src
+  useEffect(() => {
+    if (videoRef0.current && src0) {
+      if (videoRef0.current.readyState >= 1) videoRef0.current.currentTime = 0;
+      safePlayVideo(videoRef0.current);
+    }
+  }, [src0]);
+
+  useEffect(() => {
+    if (videoRef1.current && src1) {
+      if (videoRef1.current.readyState >= 1) videoRef1.current.currentTime = 0;
+      safePlayVideo(videoRef1.current);
+    }
+  }, [src1]);
+
+  const handleVideoPlaying = (playerIndex) => {
+    if (playerIndex !== activePlayer) {
+      setActivePlayer(playerIndex);
+      const inactiveRef = playerIndex === 0 ? videoRef1 : videoRef0;
+      if (inactiveRef.current) inactiveRef.current.pause();
+    }
+  };
+
+  const handleSpeechSuccess = () => {
+    if (speechSuccessRef.current) return;
+    speechSuccessRef.current = true;
+    playSuccessChime();
+    stopSpeechRecognition();
+
+    if (stepIndex < totalSteps - 1) {
+      setStepIndex(prev => prev + 1);
+    } else if (onNextScene) {
+      onNextScene();
+    }
+  };
+
+  // Web Audio API & Speech Recognition
+  const startSpeechRecognition = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 }
+      }).then((stream) => {
+        micStreamRef.current = stream;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        audioCtxRef.current = audioCtx;
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64;
+        const source = audioCtx.createMediaStreamSource(stream);
+        source.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        let voiceFrames = 0;
+
+        const analyze = () => {
+          analyser.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i];
+          }
+          const avg = sum / dataArray.length;
+          setAudioVolume(avg);
+
+          // Voice Activity Detection (VAD)
+          if (avg > 30) {
+            voiceFrames++;
+            if (voiceFrames >= 25 && !speechSuccessRef.current) {
+              handleSpeechSuccess();
+              return;
+            }
+          } else {
+            voiceFrames = Math.max(0, voiceFrames - 1);
+          }
+
+          animFrameRef.current = requestAnimationFrame(analyze);
+        };
+        analyze();
+      }).catch(() => {});
+    }
+
+    if (!SpeechRecognition) {
+      setMicSupported(false);
+      return;
+    }
+
+    setMicSupported(true);
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        const rawTranscript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join(' ')
+          .toLowerCase();
+
+        setSpokenText(rawTranscript);
+        if (rawTranscript.trim().length >= 2) {
+          handleSpeechSuccess();
+        }
+      };
+
+      recognition.onerror = (err) => {
+        console.warn('Scene 5 speech recognition error:', err);
+      };
+
+      recognition.onend = () => {
+        if (currentStep.type === 'user_speaking' && !speechSuccessRef.current) {
+          try { recognition.start(); } catch (e) {}
+        }
+      };
+
+      recognition.start();
+      recognitionRef.current = recognition;
+      setIsListening(true);
+    } catch (e) {
+      console.warn('Scene 5 speech recognition start failed:', e);
+    }
+  };
+
+  const stopSpeechRecognition = () => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) {}
+      recognitionRef.current = null;
+    }
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    if (audioCtxRef.current) {
+      try { audioCtxRef.current.close(); } catch (e) {}
+      audioCtxRef.current = null;
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach(track => track.stop());
+      micStreamRef.current = null;
+    }
+    setIsListening(false);
+    setAudioVolume(0);
+  };
+
+  return (
+    <div className="scene5-wrapper">
+      {/* Top Glassmorphic Navigation Header */}
+      <header className="scene5-header glass-panel">
+        <div className="header-info">
+          <div className="badge-pill">
+            <Sparkles size={16} color="var(--accent-gold)" />
+            <span>Scene 5: 1-on-1 Practice</span>
+          </div>
+          <h1 className="scene-title">
+            {currentStep.type === 'milo_talking' ? '💬 Milo is talking to you!' : `🎙️ ${currentStep.prompt}`}
+          </h1>
+        </div>
+
+        <div className="top-nav-controls">
+          <button className="nav-arrow-btn" onClick={onPrevScene} disabled={!hasPrevScene} title="Previous Scene">
+            <ChevronLeft size={22} />
+          </button>
+          
+          <div className="step-indicator">
+            Step {stepIndex + 1} of {totalSteps}
+          </div>
+
+          <button className="nav-arrow-btn highlight-arrow" onClick={onNextScene} disabled={!hasNextScene} title="Next Scene">
+            <ChevronRight size={22} />
+          </button>
+        </div>
+      </header>
+
+      {/* Main Video Canvas Area */}
+      <div className="video-aspect-container glass-panel">
+        <video
+          ref={videoRef0}
+          src={src0}
+          className={`main-video-player ${activePlayer === 0 ? 'video-active' : 'video-hidden'}`}
+          onPlaying={() => handleVideoPlaying(0)}
+          loop
+          muted
+          preload="auto"
+          playsInline
+        />
+        <video
+          ref={videoRef1}
+          src={src1}
+          className={`main-video-player ${activePlayer === 1 ? 'video-active' : 'video-hidden'}`}
+          onPlaying={() => handleVideoPlaying(1)}
+          loop
+          muted
+          preload="auto"
+          playsInline
+        />
+
+        {/* MILO SUBTITLE CARD OVERLAY (When Milo is Talking) */}
+        {currentStep.type === 'milo_talking' && currentStep.subtitle && (
+          <div className="milo-subtitle-card glass-panel">
+            <div className="milo-avatar">🦁</div>
+            <p className="milo-speech-text">"{currentStep.subtitle}"</p>
+          </div>
+        )}
+
+        {/* 3D MICROPHONE SPEAKING WIDGET OVERLAY (Only Appears during User Turn!) */}
+        {currentStep.type === 'user_speaking' && (
+          <div className="mic-3d-speech-overlay">
+            <div className="mic-3d-widget">
+              {/* Sonic Ripples on Voice Detection */}
+              {audioVolume > 8 && (
+                <div 
+                  className="sonic-ripple-container active-voice"
+                  style={{
+                    transform: `translate(-50%, -50%) scale(${1 + Math.min(Math.max(audioVolume - 8, 0) / 25, 0.85)})`,
+                    opacity: Math.min(0.6 + audioVolume / 50, 0.95)
+                  }}
+                >
+                  <div className="ripple-wave wave-1"></div>
+                  <div className="ripple-wave wave-2"></div>
+                  <div className="ripple-wave wave-3"></div>
+                </div>
+              )}
+
+              {/* Live Transcript Tag */}
+              {spokenText && (
+                <div className="mic-live-spoken-tag glass-panel">
+                  Hearing: "{spokenText}"
+                </div>
+              )}
+
+              {/* Interactive 3D Mic Image (Tap to trigger match) */}
+              <div 
+                className="mic-3d-img-wrapper"
+                onClick={handleSpeechSuccess}
+                title="Tap mic to finish turn"
+              >
+                <img src="/images/mic_3d.png" alt="Microphone" className="mic-3d-img" />
+              </div>
+
+              <div className="user-prompt-chip">
+                <span>{currentStep.prompt}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

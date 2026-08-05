@@ -202,5 +202,44 @@ export const SCENE_CONFIG = [
     title: 'Scene 4: Finding the Rabbit',
     type: 'voice',
     titleText: 'Call the Rabbit back!'
+  },
+  {
+    id: 'scene_05',
+    title: 'Scene 5: 1-on-1 Chat with Milo',
+    type: 'milo_1on1',
+    talkVideo: 'scene_05_milo talk.mp4',
+    idleVideo: 'scene_05_milo idle.mp4',
+    steps: [
+      {
+        stepIndex: 0,
+        type: 'milo_talking',
+        audio: 'scene_05_milo intro.mp3',
+        subtitle: 'Hi there! Welcome to my zoo adventure!'
+      },
+      {
+        stepIndex: 1,
+        type: 'user_speaking',
+        prompt: 'Say hi to Milo! 👋',
+        targetWord: 'hi'
+      },
+      {
+        stepIndex: 2,
+        type: 'milo_talking',
+        audio: 'scene_05_milo answer 1.mp3',
+        subtitle: 'What animal do you want to see next?'
+      },
+      {
+        stepIndex: 3,
+        type: 'user_speaking',
+        prompt: 'Answer Milo! 🦁🦒',
+        targetWord: 'lion'
+      },
+      {
+        stepIndex: 4,
+        type: 'milo_talking',
+        audio: 'scene_05_milo answer 2.mp3',
+        subtitle: 'Awesome! Let us go check them out!'
+      }
+    ]
   }
 ];
