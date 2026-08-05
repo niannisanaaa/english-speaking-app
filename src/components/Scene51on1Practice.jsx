@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, Volume2, VolumeX, Mic } from 'lucide-react';
-import { playSuccessChime, playTapChime } from '../utils/soundEffects';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { playSuccessChime } from '../utils/soundEffects';
 import './Scene51on1Practice.css';
 
 export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene, hasPrevScene, hasNextScene }) {
@@ -9,11 +9,13 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
   const [audioVolume, setAudioVolume] = useState(0);
   const [micSupported, setMicSupported] = useState(true);
   const [isListening, setIsListening] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   const videoRef0 = useRef(null);
   const videoRef1 = useRef(null);
+
   const audioRef = useRef(null);
-  const playedAudioStepRef = useRef(-1);
+  const currentAudioUrlRef = useRef('');
 
   const audioCtxRef = useRef(null);
   const animFrameRef = useRef(null);
@@ -22,8 +24,11 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
   const speechSuccessRef = useRef(false);
 
   const steps = sceneData.steps;
-  const currentStep = steps[stepIndex] || steps[0];
   const totalSteps = steps.length;
+
+  // Clamp stepIndex strictly within valid bounds [0, totalSteps - 1]
+  const safeStepIdx = Math.min(Math.max(0, stepIndex), totalSteps - 1);
+  const currentStep = steps[safeStepIdx];
 
   const resolveMediaUrl = (path) => {
     return window.__zooBlobUrls?.[path] || path;
@@ -37,8 +42,8 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
   });
   const [src1, setSrc1] = useState('');
 
-  // Helper to destroy audio completely and prevent duplicate firings
-  const destroyAudio = () => {
+  // Stop & destroy current audio safely
+  const stopAudioTrack = () => {
     if (audioRef.current) {
       audioRef.current.onended = null;
       audioRef.current.onerror = null;
@@ -46,95 +51,77 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
       audioRef.current.currentTime = 0;
       audioRef.current = null;
     }
+    currentAudioUrlRef.current = '';
   };
 
   // Safe Video Player Trigger
   const safePlayVideo = (videoEl) => {
     if (!videoEl) return;
-    videoEl.muted = true; // Video is always muted because audio tracks are played via Audio element
-    videoEl.play().catch(err => {
-      console.warn("Scene 5 video play failed:", err);
-    });
+    videoEl.muted = true;
+    videoEl.play().catch(err => console.warn("Scene 5 video play failed:", err));
   };
 
-  // Switch video src dynamically between talk and idle + audio manager + 5s speaking limit
+  // Synchronize Video src & Audio Playback
   useEffect(() => {
     speechSuccessRef.current = false;
     setSpokenText('');
+
+    if (isCompleted) return;
 
     const isTalk = currentStep.type === 'milo_talking';
     const targetVideoName = isTalk ? sceneData.talkVideo : sceneData.idleVideo;
     const targetSrc = resolveMediaUrl(`/Videos/${targetVideoName}`);
 
+    // Seamless Video Player Switch
     if (activePlayer === 0) {
-      if (src0 === targetSrc) {
-        if (videoRef0.current) {
-          if (videoRef0.current.readyState >= 1) videoRef0.current.currentTime = 0;
-          safePlayVideo(videoRef0.current);
-        }
-      } else {
+      if (src0 !== targetSrc) {
         setSrc1(targetSrc);
         setActivePlayer(1);
-        if (videoRef1.current) {
-          if (videoRef1.current.readyState >= 1) videoRef1.current.currentTime = 0;
-          safePlayVideo(videoRef1.current);
-        }
       }
     } else {
-      if (src1 === targetSrc) {
-        if (videoRef1.current) {
-          if (videoRef1.current.readyState >= 1) videoRef1.current.currentTime = 0;
-          safePlayVideo(videoRef1.current);
-        }
-      } else {
+      if (src1 !== targetSrc) {
         setSrc0(targetSrc);
         setActivePlayer(0);
-        if (videoRef0.current) {
-          if (videoRef0.current.readyState >= 1) videoRef0.current.currentTime = 0;
-          safePlayVideo(videoRef0.current);
-        }
       }
     }
 
-    // Audio Playback for Milo Talking Steps (Single Instance Guaranteed)
+    // Audio Playback for Milo Talking Steps
     if (isTalk && currentStep.audio) {
-      // Only play audio once per stepIndex to prevent duplicate triggers
-      if (playedAudioStepRef.current !== stepIndex) {
-        playedAudioStepRef.current = stepIndex;
-        destroyAudio();
+      const targetAudioUrl = resolveMediaUrl(`/Audio/${currentStep.audio}`);
 
-        const audioUrl = resolveMediaUrl(`/Audio/${currentStep.audio}`);
-        const audio = new Audio(audioUrl);
+      // ONLY instantiate and play if this audio track isn't already playing!
+      if (currentAudioUrlRef.current !== targetAudioUrl) {
+        stopAudioTrack();
+        currentAudioUrlRef.current = targetAudioUrl;
+
+        const audio = new Audio(targetAudioUrl);
         audioRef.current = audio;
 
         audio.onended = () => {
-          audio.onended = null;
-          console.log(`Step ${stepIndex} audio completed 100%. Advancing step...`);
-          destroyAudio();
+          console.log(`Audio for step ${safeStepIdx} (${currentStep.audio}) finished 100%.`);
+          stopAudioTrack();
 
-          setStepIndex(current => {
-            if (current === stepIndex && current < totalSteps - 1) {
-              return current + 1;
-            }
-            return current;
-          });
+          if (safeStepIdx < totalSteps - 1) {
+            setStepIndex(safeStepIdx + 1);
+          } else {
+            console.log("Scene 5 conversation completed!");
+            setIsCompleted(true);
+            if (onNextScene) onNextScene();
+          }
         };
 
-        audio.play().catch(err => {
-          console.warn("Milo audio play restricted:", err);
-        });
+        audio.play().catch(err => console.warn("Milo audio play failed:", err));
       }
     } else {
-      destroyAudio();
+      stopAudioTrack();
     }
 
-    // Speech Recognition for User Speaking Steps + Max 5 Seconds Limit
+    // Speech Recognition & 5s Limit for User Speaking Steps
     let timeoutTimer;
     if (currentStep.type === 'user_speaking') {
       startSpeechRecognition();
-      // Maximum 5 Seconds limit for speaking widget
       timeoutTimer = setTimeout(() => {
-        console.log("Speaking widget 5s limit reached. Advancing to Milo's response...");
+        console.log("5s speaking widget limit reached. Advancing to Milo's response...");
         handleSpeechSuccess();
       }, 5000);
     } else {
@@ -143,10 +130,8 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
 
     return () => {
       if (timeoutTimer) clearTimeout(timeoutTimer);
-      destroyAudio();
-      stopSpeechRecognition();
     };
-  }, [stepIndex]);
+  }, [safeStepIdx, isCompleted]);
 
   // Ensure DOM video elements play immediately after React updates src
   useEffect(() => {
@@ -163,6 +148,14 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
     }
   }, [src1]);
 
+  // Global Cleanup on Component Unmount
+  useEffect(() => {
+    return () => {
+      stopAudioTrack();
+      stopSpeechRecognition();
+    };
+  }, []);
+
   const handleVideoPlaying = (playerIndex) => {
     if (playerIndex !== activePlayer) {
       setActivePlayer(playerIndex);
@@ -172,15 +165,14 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
   };
 
   const handleSpeechSuccess = () => {
-    // MUST ONLY RESPOND DURING USER SPEAKING STEPS! Never interrupt Milo talking audio!
     if (currentStep.type !== 'user_speaking') return;
     if (speechSuccessRef.current) return;
     speechSuccessRef.current = true;
     playSuccessChime();
     stopSpeechRecognition();
 
-    if (stepIndex < totalSteps - 1) {
-      setStepIndex(prev => prev + 1);
+    if (safeStepIdx < totalSteps - 1) {
+      setStepIndex(safeStepIdx + 1);
     } else if (onNextScene) {
       onNextScene();
     }
@@ -315,7 +307,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
           </button>
           
           <div className="step-indicator">
-            Step {stepIndex + 1} of {totalSteps}
+            Step {safeStepIdx + 1} of {totalSteps}
           </div>
 
           <button className="nav-arrow-btn highlight-arrow" onClick={onNextScene} disabled={!hasNextScene} title="Next Scene">
