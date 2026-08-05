@@ -155,6 +155,8 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
   };
 
   const handleSpeechSuccess = () => {
+    // MUST ONLY RESPOND DURING USER SPEAKING STEPS! Never interrupt Milo talking audio!
+    if (currentStep.type !== 'user_speaking') return;
     if (speechSuccessRef.current) return;
     speechSuccessRef.current = true;
     playSuccessChime();
@@ -199,7 +201,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
           // Voice Activity Detection (VAD)
           if (avg > 30) {
             voiceFrames++;
-            if (voiceFrames >= 25 && !speechSuccessRef.current) {
+            if (voiceFrames >= 25 && !speechSuccessRef.current && currentStep.type === 'user_speaking') {
               handleSpeechSuccess();
               return;
             }
