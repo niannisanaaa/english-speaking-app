@@ -45,7 +45,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
     });
   };
 
-  // Switch video src dynamically between talk and idle
+  // Switch video src dynamically between talk and idle + 5s speaking limit
   useEffect(() => {
     speechSuccessRef.current = false;
     setSpokenText('');
@@ -62,6 +62,11 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
         }
       } else {
         setSrc1(targetSrc);
+        setActivePlayer(1);
+        if (videoRef1.current) {
+          if (videoRef1.current.readyState >= 1) videoRef1.current.currentTime = 0;
+          safePlayVideo(videoRef1.current);
+        }
       }
     } else {
       if (src1 === targetSrc) {
@@ -71,6 +76,11 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
         }
       } else {
         setSrc0(targetSrc);
+        setActivePlayer(0);
+        if (videoRef0.current) {
+          if (videoRef0.current.readyState >= 1) videoRef0.current.currentTime = 0;
+          safePlayVideo(videoRef0.current);
+        }
       }
     }
 
@@ -99,14 +109,21 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
       }
     }
 
-    // Speech Recognition for User Speaking Steps
+    // Speech Recognition for User Speaking Steps + Max 5 Seconds Limit
+    let timeoutTimer;
     if (currentStep.type === 'user_speaking') {
       startSpeechRecognition();
+      // Maximum 5 Seconds limit for speaking widget
+      timeoutTimer = setTimeout(() => {
+        console.log("Speaking widget 5s limit reached. Advancing to Milo's response...");
+        handleSpeechSuccess();
+      }, 5000);
     } else {
       stopSpeechRecognition();
     }
 
     return () => {
+      if (timeoutTimer) clearTimeout(timeoutTimer);
       if (audioRef.current) {
         audioRef.current.pause();
       }
