@@ -213,32 +213,67 @@ export const SCENE_CONFIG = [
       {
         stepIndex: 0,
         type: 'milo_talking',
-        audio: 'scene_05_milo intro.mp3',
-        subtitle: 'Hi there! Welcome to my zoo adventure!'
+        audio: 'scene_05_milo intro.mp3'
       },
       {
         stepIndex: 1,
         type: 'user_speaking',
-        prompt: 'Say hi to Milo! 👋',
-        targetWord: 'hi'
+        prompt: 'Say something to Milo! 🎙️'
       },
       {
         stepIndex: 2,
         type: 'milo_talking',
-        audio: 'scene_05_milo answer 1.mp3',
-        subtitle: 'What animal do you want to see next?'
+        audio: 'scene_05_milo answer 1.mp3'
       },
       {
         stepIndex: 3,
         type: 'user_speaking',
-        prompt: 'Answer Milo! 🦁🦒',
-        targetWord: 'lion'
+        prompt: 'Answer Milo! 🎙️'
       },
       {
         stepIndex: 4,
         type: 'milo_talking',
-        audio: 'scene_05_milo answer 2.mp3',
-        subtitle: 'Awesome! Let us go check them out!'
+        audio: 'scene_05_milo answer 2.mp3'
+      },
+      {
+        stepIndex: 5,
+        type: 'user_speaking',
+        prompt: 'Your turn to speak! 🎙️'
+      },
+      {
+        stepIndex: 6,
+        type: 'milo_talking',
+        audio: 'scene_05_milo answer 3.mp3'
+      },
+      {
+        stepIndex: 7,
+        type: 'user_speaking',
+        prompt: 'Talk to Milo! 🎙️'
+      },
+      {
+        stepIndex: 8,
+        type: 'milo_talking',
+        audio: 'scene_05_milo answer 4.mp3'
+      },
+      {
+        stepIndex: 9,
+        type: 'user_speaking',
+        prompt: 'Your turn to speak! 🎙️'
+      },
+      {
+        stepIndex: 10,
+        type: 'milo_talking',
+        audio: 'scene_05_milo answer 5.mp3'
+      },
+      {
+        stepIndex: 11,
+        type: 'user_speaking',
+        prompt: 'Answer Milo! 🎙️'
+      },
+      {
+        stepIndex: 12,
+        type: 'milo_talking',
+        audio: 'scene_05_milo answer 6.mp3'
       }
     ]
   }

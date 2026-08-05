@@ -78,7 +78,11 @@ export default function App() {
       '/Videos/scene_05_milo talk.mp4',
       '/Audio/scene_05_milo intro.mp3',
       '/Audio/scene_05_milo answer 1.mp3',
-      '/Audio/scene_05_milo answer 2.mp3'
+      '/Audio/scene_05_milo answer 2.mp3',
+      '/Audio/scene_05_milo answer 3.mp3',
+      '/Audio/scene_05_milo answer 4.mp3',
+      '/Audio/scene_05_milo answer 5.mp3',
+      '/Audio/scene_05_milo answer 6.mp3'
     ];
 
     let totalDownloaded = 0;
