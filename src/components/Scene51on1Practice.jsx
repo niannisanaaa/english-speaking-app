@@ -11,8 +11,8 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
   const [isListening, setIsListening] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  const videoRef0 = useRef(null);
-  const videoRef1 = useRef(null);
+  const videoTalkRef = useRef(null);
+  const videoIdleRef = useRef(null);
 
   const audioRef = useRef(null);
   const currentAudioUrlRef = useRef('');
@@ -34,13 +34,8 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
     return window.__zooBlobUrls?.[path] || path;
   };
 
-  const [activePlayer, setActivePlayer] = useState(0);
-  const [src0, setSrc0] = useState(() => {
-    const isTalk = currentStep.type === 'milo_talking';
-    const videoName = isTalk ? sceneData.talkVideo : sceneData.idleVideo;
-    return resolveMediaUrl(`/Videos/${videoName}`);
-  });
-  const [src1, setSrc1] = useState('');
+  const talkVideoSrc = resolveMediaUrl(`/Videos/${sceneData.talkVideo}`);
+  const idleVideoSrc = resolveMediaUrl(`/Videos/${sceneData.idleVideo}`);
 
   // Stop & destroy current audio safely
   const stopAudioTrack = () => {
@@ -61,7 +56,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
     videoEl.play().catch(err => console.warn("Scene 5 video play failed:", err));
   };
 
-  // Synchronize Video src & Audio Playback
+  // Synchronize Video & Audio Playback for current step
   useEffect(() => {
     speechSuccessRef.current = false;
     setSpokenText('');
@@ -69,19 +64,19 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
     if (isCompleted) return;
 
     const isTalk = currentStep.type === 'milo_talking';
-    const targetVideoName = isTalk ? sceneData.talkVideo : sceneData.idleVideo;
-    const targetSrc = resolveMediaUrl(`/Videos/${targetVideoName}`);
 
-    // Seamless Video Player Switch
-    if (activePlayer === 0) {
-      if (src0 !== targetSrc) {
-        setSrc1(targetSrc);
-        setActivePlayer(1);
+    // Direct, guaranteed Video Switch: Player 0 (Talk) vs Player 1 (Idle)
+    if (isTalk) {
+      if (videoIdleRef.current) videoIdleRef.current.pause();
+      if (videoTalkRef.current) {
+        if (videoTalkRef.current.readyState >= 1) videoTalkRef.current.currentTime = 0;
+        safePlayVideo(videoTalkRef.current);
       }
     } else {
-      if (src1 !== targetSrc) {
-        setSrc0(targetSrc);
-        setActivePlayer(0);
+      if (videoTalkRef.current) videoTalkRef.current.pause();
+      if (videoIdleRef.current) {
+        if (videoIdleRef.current.readyState >= 1) videoIdleRef.current.currentTime = 0;
+        safePlayVideo(videoIdleRef.current);
       }
     }
 
@@ -133,21 +128,6 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
     };
   }, [safeStepIdx, isCompleted]);
 
-  // Ensure DOM video elements play immediately after React updates src
-  useEffect(() => {
-    if (videoRef0.current && src0) {
-      if (videoRef0.current.readyState >= 1) videoRef0.current.currentTime = 0;
-      safePlayVideo(videoRef0.current);
-    }
-  }, [src0]);
-
-  useEffect(() => {
-    if (videoRef1.current && src1) {
-      if (videoRef1.current.readyState >= 1) videoRef1.current.currentTime = 0;
-      safePlayVideo(videoRef1.current);
-    }
-  }, [src1]);
-
   // Global Cleanup on Component Unmount
   useEffect(() => {
     return () => {
@@ -155,14 +135,6 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
       stopSpeechRecognition();
     };
   }, []);
-
-  const handleVideoPlaying = (playerIndex) => {
-    if (playerIndex !== activePlayer) {
-      setActivePlayer(playerIndex);
-      const inactiveRef = playerIndex === 0 ? videoRef1 : videoRef0;
-      if (inactiveRef.current) inactiveRef.current.pause();
-    }
-  };
 
   const handleSpeechSuccess = () => {
     if (currentStep.type !== 'user_speaking') return;
@@ -287,6 +259,8 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
     setAudioVolume(0);
   };
 
+  const isTalk = currentStep.type === 'milo_talking';
+
   return (
     <div className="scene5-wrapper">
       {/* Top Glassmorphic Navigation Header */}
@@ -296,9 +270,6 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
             <Sparkles size={16} color="var(--accent-gold)" />
             <span>Scene 5: 1-on-1 Practice</span>
           </div>
-          <h1 className="scene-title">
-            {currentStep.type === 'milo_talking' ? '💬 Milo is talking to you!' : `🎙️ ${currentStep.prompt}`}
-          </h1>
         </div>
 
         <div className="top-nav-controls">
@@ -318,34 +289,27 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
 
       {/* Main Video Canvas Area */}
       <div className="video-aspect-container glass-panel">
+        {/* Permanent Video Player 0: Milo Talk Video */}
         <video
-          ref={videoRef0}
-          src={src0}
-          className={`main-video-player ${activePlayer === 0 ? 'video-active' : 'video-hidden'}`}
-          onPlaying={() => handleVideoPlaying(0)}
-          loop
-          muted
-          preload="auto"
-          playsInline
-        />
-        <video
-          ref={videoRef1}
-          src={src1}
-          className={`main-video-player ${activePlayer === 1 ? 'video-active' : 'video-hidden'}`}
-          onPlaying={() => handleVideoPlaying(1)}
+          ref={videoTalkRef}
+          src={talkVideoSrc}
+          className={`main-video-player ${isTalk ? 'video-active' : 'video-hidden'}`}
           loop
           muted
           preload="auto"
           playsInline
         />
 
-        {/* MILO SUBTITLE CARD OVERLAY (When Milo is Talking) */}
-        {currentStep.type === 'milo_talking' && currentStep.subtitle && (
-          <div className="milo-subtitle-card glass-panel">
-            <div className="milo-avatar">🦁</div>
-            <p className="milo-speech-text">"{currentStep.subtitle}"</p>
-          </div>
-        )}
+        {/* Permanent Video Player 1: Milo Idle Video */}
+        <video
+          ref={videoIdleRef}
+          src={idleVideoSrc}
+          className={`main-video-player ${!isTalk ? 'video-active' : 'video-hidden'}`}
+          loop
+          muted
+          preload="auto"
+          playsInline
+        />
 
         {/* 3D MICROPHONE SPEAKING WIDGET OVERLAY (Only Appears during User Turn!) */}
         {currentStep.type === 'user_speaking' && (
@@ -380,10 +344,6 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
                 title="Tap mic to finish turn"
               >
                 <img src="/images/mic_3d.png" alt="Microphone" className="mic-3d-img" />
-              </div>
-
-              <div className="user-prompt-chip">
-                <span>{currentStep.prompt}</span>
               </div>
             </div>
           </div>
