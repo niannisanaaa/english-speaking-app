@@ -216,6 +216,15 @@ export default function App() {
   };
 
   const handleStartApp = () => {
+    // Unlock HTML5 audio engine on mobile browsers via user touch gesture
+    try {
+      const dummy = new Audio();
+      dummy.muted = true;
+      dummy.play().then(() => {
+        dummy.pause();
+      }).catch(() => {});
+    } catch (e) {}
+
     setIsPreloading(false);
   };
 

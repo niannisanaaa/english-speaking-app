@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, Volume2 } from 'lucide-react';
 import { playSuccessChime } from '../utils/soundEffects';
 import './Scene51on1Practice.css';
 
@@ -10,6 +10,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
   const [micSupported, setMicSupported] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isAudioBlocked, setIsAudioBlocked] = useState(false);
 
   const videoTalkRef = useRef(null);
   const videoIdleRef = useRef(null);
@@ -47,6 +48,19 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
       audioRef.current = null;
     }
     currentAudioUrlRef.current = '';
+  };
+
+  // Mobile User Gesture Audio Unlocker
+  const handleUserGestureUnlock = () => {
+    if (audioRef.current && audioRef.current.paused) {
+      audioRef.current.play().then(() => {
+        setIsAudioBlocked(false);
+      }).catch(err => {
+        console.warn("Manual user gesture audio play failed:", err);
+      });
+    } else {
+      setIsAudioBlocked(false);
+    }
   };
 
   // Safe Video Player Trigger
@@ -105,7 +119,13 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
           }
         };
 
-        audio.play().catch(err => console.warn("Milo audio play failed:", err));
+        // Mobile Browser Audio Autoplay Handler
+        audio.play().then(() => {
+          setIsAudioBlocked(false);
+        }).catch(err => {
+          console.warn("Milo audio blocked by mobile browser autoplay policy:", err);
+          setIsAudioBlocked(true);
+        });
       }
     } else {
       stopAudioTrack();
@@ -287,8 +307,12 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
         </div>
       </header>
 
-      {/* Main Video Canvas Area */}
-      <div className="video-aspect-container glass-panel">
+      {/* Main Video Canvas Area (Listens for Touch/Click to Unlock Mobile Audio) */}
+      <div 
+        className="video-aspect-container glass-panel"
+        onClick={handleUserGestureUnlock}
+        onTouchStart={handleUserGestureUnlock}
+      >
         {/* Permanent Video Player 0: Milo Talk Video */}
         <video
           ref={videoTalkRef}
@@ -310,6 +334,14 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
           preload="auto"
           playsInline
         />
+
+        {/* Mobile Browser Audio Unmute Floating Badge */}
+        {isAudioBlocked && isTalk && (
+          <div className="mobile-audio-unmute-badge glass-panel">
+            <Volume2 size={20} className="unmute-icon" />
+            <span>Tap screen to play Milo's voice 🔊</span>
+          </div>
+        )}
 
         {/* 3D MICROPHONE SPEAKING WIDGET OVERLAY (Only Appears during User Turn!) */}
         {currentStep.type === 'user_speaking' && (
