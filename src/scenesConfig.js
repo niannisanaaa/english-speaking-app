@@ -276,12 +276,6 @@ export const SCENE_CONFIG = [
     ]
   },
   {
-    id: 'scene_04',
-    title: 'Scene 4: Finding the Rabbit',
-    type: 'voice',
-    titleText: 'Call the Rabbit back!'
-  },
-  {
     id: 'scene_05',
     title: 'Scene 5: 1-on-1 Chat with Milo',
     type: 'milo_1on1',

@@ -335,7 +335,7 @@ export default function App() {
                   onClick={() => setCurrentSceneIdx(idx)}
                 >
                   <MapPin size={14} />
-                  <span>Scene {idx + 1}</span>
+                  <span>Scene {scene.id.replace('scene_0', '')}</span>
                 </button>
               ))}
             </div>
