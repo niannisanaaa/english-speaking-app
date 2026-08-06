@@ -18,6 +18,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
   const [micSupported, setMicSupported] = useState(true);
 
   const recognitionRef = useRef(null);
+  const speakingTimerRef = useRef(null);
 
   const activeAnimal = sceneData.animals[currentAnimalId] || sceneData.animals.lion;
   const currentStep = activeAnimal.steps[stepIndex] || activeAnimal.steps[0];
@@ -87,6 +88,10 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
 
     return () => {
       if (coachmarkTimer) clearTimeout(coachmarkTimer);
+      if (speakingTimerRef.current) {
+        clearTimeout(speakingTimerRef.current);
+        speakingTimerRef.current = null;
+      }
       stopSpeechRecognition();
     };
   }, [stepIndex, currentAnimalId, mode]);
@@ -346,6 +351,10 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
   };
 
   const handleSpeechSuccess = () => {
+    if (speakingTimerRef.current) {
+      clearTimeout(speakingTimerRef.current);
+      speakingTimerRef.current = null;
+    }
     speechSuccessRef.current = true;
     playSuccessChime();
     setSpeechSuccess(true);
@@ -405,7 +414,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
       return;
     }
 
-    // 4. Guided Flow Speech Prompt Ended -> Handle speak_loop vs non-looping animals (e.g. Elephant)
+    // 4. Guided Flow Speech Prompt Ended -> Handle speak_loop vs non-looping animals (e.g. Elephant & Panda)
     if (mode === 'guided_flow' && currentStep.id === 'speak_prompt') {
       const activeVideo = activePlayer === 0 ? videoRef0.current : videoRef1.current;
       if (activeVideo) activeVideo.pause();
@@ -414,8 +423,15 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
       if (hasSpeakLoop) {
         setStepIndex(prev => prev + 1);
       } else {
-        console.log("Elephant speak_prompt ended. Pausing video and activating 3D mic widget...");
+        console.log(`Speech prompt ended for ${currentAnimalId}. Pausing video and activating 3D mic widget for 8s...`);
         startSpeechRecognition();
+
+        // 8 Seconds Maximum Timeout for speaking widget on paused prompt
+        if (speakingTimerRef.current) clearTimeout(speakingTimerRef.current);
+        speakingTimerRef.current = setTimeout(() => {
+          console.log("8s limit reached on paused speak prompt. Advancing to success state...");
+          handleSpeechSuccess();
+        }, 8000);
       }
       return;
     }

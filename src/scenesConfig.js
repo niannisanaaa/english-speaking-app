@@ -186,6 +186,45 @@ export const SCENE_CONFIG = [
             isLoop: false
           }
         ]
+      },
+      panda: {
+        id: 'panda',
+        displayName: 'Panda',
+        targetWord: 'panda',
+        hotspot: {
+          top: '15%',
+          left: '26%',
+          width: '18%',
+          height: '25%'
+        },
+        steps: [
+          {
+            id: 'appreciate_explain',
+            name: 'scene_02_panda_04_appreciate_explain.mp4',
+            title: 'Great Job Finding Panda!',
+            isLoop: false
+          },
+          {
+            id: 'detail_explain',
+            name: 'scene_02_panda_05_detail_explain.mp4',
+            title: 'Panda Facts',
+            isLoop: false
+          },
+          {
+            id: 'speak_prompt',
+            name: 'scene_02_panda_06_speak_prompt.mp4',
+            title: 'Can you say Panda?',
+            isLoop: false,
+            isSpeechStep: true,
+            targetWord: 'panda'
+          },
+          {
+            id: 'speech_success',
+            name: 'scene_02_panda_08_speech_success.mp4',
+            title: 'Awesome job saying Panda!',
+            isLoop: false
+          }
+        ]
       }
     }
   },
