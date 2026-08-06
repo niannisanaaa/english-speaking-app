@@ -405,10 +405,18 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
       return;
     }
 
-    // 4. Guided Flow Speech Step without Loop (e.g. Elephant) -> Pause on last frame while speaking widget is overlaid
-    if (mode === 'guided_flow' && currentStep.isSpeechStep && currentStep.id !== 'speech_success') {
+    // 4. Guided Flow Speech Prompt Ended -> Handle speak_loop vs non-looping animals (e.g. Elephant)
+    if (mode === 'guided_flow' && currentStep.id === 'speak_prompt') {
       const activeVideo = activePlayer === 0 ? videoRef0.current : videoRef1.current;
       if (activeVideo) activeVideo.pause();
+
+      const hasSpeakLoop = activeAnimal.steps.some(s => s.id === 'speak_loop');
+      if (hasSpeakLoop) {
+        setStepIndex(prev => prev + 1);
+      } else {
+        console.log("Elephant speak_prompt ended. Pausing video and activating 3D mic widget...");
+        startSpeechRecognition();
+      }
       return;
     }
 
