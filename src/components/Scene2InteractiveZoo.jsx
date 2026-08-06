@@ -78,8 +78,8 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
       }, 5000);
     }
 
-    // Speech Recognition Trigger (ONLY activates during video loop in speaking practice!)
-    if (mode === 'guided_flow' && currentStep.isSpeechStep && (currentStep.isLoop || currentStep.id === 'speak_loop')) {
+    // Speech Recognition Trigger (Activates during speech steps!)
+    if (mode === 'guided_flow' && currentStep.isSpeechStep && currentStep.id !== 'speech_success') {
       startSpeechRecognition();
     } else {
       stopSpeechRecognition();
@@ -239,10 +239,20 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
 
         const targetWord = (currentStep.targetWord || activeAnimal.targetWord || activeAnimal.id || '').toLowerCase();
         const isGiraffeMode = currentAnimalId === 'giraffe' || targetWord === 'giraffe';
+        const isElephantMode = currentAnimalId === 'elephant' || targetWord === 'elephant';
 
         let isMatch = false;
 
-        if (isGiraffeMode) {
+        if (isElephantMode) {
+          isMatch = 
+            cleanText.includes('elephant') ||
+            cleanText.includes('elefant') ||
+            cleanText.includes('elafant') ||
+            cleanText.includes('elepant') ||
+            cleanText.includes('gajah') ||
+            cleanText.includes('fant') ||
+            words.some(w => (w.startsWith('el') || w.startsWith('al') || w.startsWith('il')) && w.length >= 2);
+        } else if (isGiraffeMode) {
           isMatch = 
             cleanText.includes('giraffe') ||
             cleanText.includes('giraf') ||
@@ -392,6 +402,13 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
         activeVideo.muted = true;
         activeVideo.play().catch(() => {});
       }
+      return;
+    }
+
+    // 4. Guided Flow Speech Step without Loop (e.g. Elephant) -> Pause on last frame while speaking widget is overlaid
+    if (mode === 'guided_flow' && currentStep.isSpeechStep && currentStep.id !== 'speech_success') {
+      const activeVideo = activePlayer === 0 ? videoRef0.current : videoRef1.current;
+      if (activeVideo) activeVideo.pause();
       return;
     }
 

@@ -62,6 +62,10 @@ export default function App() {
       '/Videos/scene_02_giraffe_06_speak_prompt.mp4',
       '/Videos/scene_02_giraffe_07_speak_loop.mp4',
       '/Videos/scene_02_giraffe_08_speech_success.mp4',
+      '/Videos/scene_02_elephant_04_appreciate_explain.mp4',
+      '/Videos/scene_02_elephant_05_detail_explain.mp4',
+      '/Videos/scene_02_elephant_06_speak_prompt.mp4',
+      '/Videos/scene_02_elephant_08_speech_success.mp4',
 
       // Scene 3 I Spy Quiz Videos
       '/Videos/scene_03_ispy_01_intro_dialogue.mp4',

@@ -147,6 +147,45 @@ export const SCENE_CONFIG = [
             isLoop: false
           }
         ]
+      },
+      elephant: {
+        id: 'elephant',
+        displayName: 'Elephant',
+        targetWord: 'elephant',
+        hotspot: {
+          top: '28%',
+          left: '74%',
+          width: '22%',
+          height: '38%'
+        },
+        steps: [
+          {
+            id: 'appreciate_explain',
+            name: 'scene_02_elephant_04_appreciate_explain.mp4',
+            title: 'Great Job Finding Elephant!',
+            isLoop: false
+          },
+          {
+            id: 'detail_explain',
+            name: 'scene_02_elephant_05_detail_explain.mp4',
+            title: 'Elephant Facts',
+            isLoop: false
+          },
+          {
+            id: 'speak_prompt',
+            name: 'scene_02_elephant_06_speak_prompt.mp4',
+            title: 'Can you say Elephant?',
+            isLoop: false,
+            isSpeechStep: true,
+            targetWord: 'elephant'
+          },
+          {
+            id: 'speech_success',
+            name: 'scene_02_elephant_08_speech_success.mp4',
+            title: 'Awesome job saying Elephant!',
+            isLoop: false
+          }
+        ]
       }
     }
   },
