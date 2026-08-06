@@ -582,8 +582,8 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
           </div>
         )}
 
-        {/* STEP 7: DYNAMIC VOLUME-REACTIVE 3D MICROPHONE OVERLAY (ONLY APPEARS DURING SPEAKING VIDEO LOOP!) */}
-        {mode === 'guided_flow' && currentStep.isSpeechStep && (currentStep.isLoop || currentStep.id === 'speak_loop') && (
+        {/* STEP 7: DYNAMIC VOLUME-REACTIVE 3D MICROPHONE OVERLAY */}
+        {mode === 'guided_flow' && currentStep.isSpeechStep && currentStep.id !== 'speech_success' && (
           <div className="mic-3d-speech-overlay">
             <div className="mic-3d-widget">
               {/* Sonic Water-Ripples (ONLY RUN WHEN VOICE IS DETECTED) */}
