@@ -245,10 +245,37 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
         const targetWord = (currentStep.targetWord || activeAnimal.targetWord || activeAnimal.id || '').toLowerCase();
         const isGiraffeMode = currentAnimalId === 'giraffe' || targetWord === 'giraffe';
         const isElephantMode = currentAnimalId === 'elephant' || targetWord === 'elephant';
+        const isPandaMode = currentAnimalId === 'panda' || targetWord === 'panda';
+        const isFishMode = currentAnimalId === 'fish' || targetWord === 'fish';
 
         let isMatch = false;
 
-        if (isElephantMode) {
+        if (isFishMode) {
+          isMatch = 
+            cleanText.includes('fish') ||
+            cleanText.includes('fis') ||
+            cleanText.includes('pish') ||
+            cleanText.includes('vish') ||
+            cleanText.includes('ikan') ||
+            cleanText.includes('ish') ||
+            words.some(w => (w.startsWith('fi') || w.startsWith('fe') || w.startsWith('pi')) && w.length >= 2);
+        } else if (isPandaMode) {
+          isMatch = 
+            cleanText.includes('panda') ||
+            cleanText.includes('penda') ||
+            cleanText.includes('panta') ||
+            cleanText.includes('pander') ||
+            words.some(w => (w.startsWith('pan') || w.startsWith('pen') || w.startsWith('pa')) && w.length >= 2);
+        } else if (isElephantMode) {
+          isMatch = 
+            cleanText.includes('elephant') ||
+            cleanText.includes('elefant') ||
+            cleanText.includes('elafant') ||
+            cleanText.includes('elepant') ||
+            cleanText.includes('gajah') ||
+            cleanText.includes('fant') ||
+            words.some(w => (w.startsWith('el') || w.startsWith('al') || w.startsWith('il')) && w.length >= 2);
+        } else if (isGiraffeMode) {
           isMatch = 
             cleanText.includes('elephant') ||
             cleanText.includes('elefant') ||
@@ -423,15 +450,15 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
       if (hasSpeakLoop) {
         setStepIndex(prev => prev + 1);
       } else {
-        console.log(`Speech prompt ended for ${currentAnimalId}. Pausing video and activating 3D mic widget for 8s...`);
+        console.log(`Speech prompt ended for ${currentAnimalId}. Pausing video and activating 3D mic widget for 10s...`);
         startSpeechRecognition();
 
-        // 8 Seconds Maximum Timeout for speaking widget on paused prompt
+        // 10 Seconds Maximum Timeout for speaking widget on paused prompt
         if (speakingTimerRef.current) clearTimeout(speakingTimerRef.current);
         speakingTimerRef.current = setTimeout(() => {
-          console.log("8s limit reached on paused speak prompt. Advancing to success state...");
+          console.log("10s limit reached on paused speak prompt. Advancing to success state...");
           handleSpeechSuccess();
-        }, 8000);
+        }, 10000);
       }
       return;
     }

@@ -225,6 +225,51 @@ export const SCENE_CONFIG = [
             isLoop: false
           }
         ]
+      },
+      fish: {
+        id: 'fish',
+        displayName: 'Fish',
+        targetWord: 'fish',
+        hotspot: {
+          top: '55%',
+          left: '42%',
+          width: '22%',
+          height: '30%'
+        },
+        steps: [
+          {
+            id: 'appreciate_explain',
+            name: 'scene_02_fish_04_appreciate_explain.mp4',
+            title: 'Great Job Finding Fish!',
+            isLoop: false
+          },
+          {
+            id: 'detail_explain_1',
+            name: 'scene_02_fish_05_detail_explain_01.mp4',
+            title: 'Fish Facts Part 1',
+            isLoop: false
+          },
+          {
+            id: 'detail_explain_2',
+            name: 'scene_02_fish_05_detail_explain_02.mp4',
+            title: 'Fish Facts Part 2',
+            isLoop: false
+          },
+          {
+            id: 'speak_prompt',
+            name: 'scene_02_fish_06_speak_prompt.mp4',
+            title: 'Can you say Fish?',
+            isLoop: false,
+            isSpeechStep: true,
+            targetWord: 'fish'
+          },
+          {
+            id: 'speech_success',
+            name: 'scene_02_fish_08_speech_success.mp4',
+            title: 'Awesome job saying Fish!',
+            isLoop: false
+          }
+        ]
       }
     }
   },

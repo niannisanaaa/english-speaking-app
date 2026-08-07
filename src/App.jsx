@@ -70,6 +70,11 @@ export default function App() {
       '/Videos/scene_02_panda_05_detail_explain.mp4',
       '/Videos/scene_02_panda_06_speak_prompt.mp4',
       '/Videos/scene_02_panda_08_speech_success.mp4',
+      '/Videos/scene_02_fish_04_appreciate_explain.mp4',
+      '/Videos/scene_02_fish_05_detail_explain_01.mp4',
+      '/Videos/scene_02_fish_05_detail_explain_02.mp4',
+      '/Videos/scene_02_fish_06_speak_prompt.mp4',
+      '/Videos/scene_02_fish_08_speech_success.mp4',
 
       // Scene 3 I Spy Quiz Videos
       '/Videos/scene_03_ispy_01_intro_dialogue.mp4',
