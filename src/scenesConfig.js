@@ -274,13 +274,50 @@ export const SCENE_CONFIG = [
     }
   },
   {
-    id: 'scene_03',
-    title: 'Scene 3: Animal Feeding Activity',
+    id: 'scene_03_ispy',
+    title: 'Scene 3: I Spy Quiz',
+    type: 'quiz',
+    titleText: 'I Spy With My Little Eye...',
+    introVideo: 'scene_03_ispy_01_intro_dialogue.mp4',
+    outroVideo: 'scene_03_ispy_feedback_correct.mp4',
+    feedbackVideos: {
+      correct: 'scene_03_ispy_feedback_correct.mp4',
+      wrong: 'scene_03_ispy_feedback_wrong.mp4'
+    },
+    quizQuestions: [
+      {
+        id: 'q1_panda',
+        targetAnimal: 'panda',
+        promptVideo: 'scene_03_ispy_02_prompt_panda.mp4',
+        hintText: 'Find the PANDA eating bamboo! 🐼',
+        hotspots: {
+          panda: { top: '15%', left: '26%', width: '18%', height: '25%', isCorrect: true },
+          lion: { top: '20%', left: 'calc(5% - 25px)', width: '22%', height: '32%', isCorrect: false },
+          elephant: { top: '28%', left: '76%', width: '22%', height: '38%', isCorrect: false }
+        }
+      },
+      {
+        id: 'q2_lion',
+        targetAnimal: 'lion',
+        promptVideo: 'scene_03_ispy_03_prompt_lion.mp4',
+        hintText: 'Find the loud LION with a big mane! 🦁',
+        hotspots: {
+          panda: { top: '15%', left: '26%', width: '18%', height: '25%', isCorrect: false },
+          lion: { top: '20%', left: 'calc(5% - 25px)', width: '22%', height: '32%', isCorrect: true },
+          elephant: { top: '28%', left: '76%', width: '22%', height: '38%', isCorrect: false }
+        }
+      }
+    ]
+  },
+  {
+    id: 'scene_03_matching',
+    title: 'Scene 3B: Animal Feeding Activity',
     type: 'matching',
     titleText: 'Feed the Animals!',
     introVideo: 'scene_03_matching_01_intro.mp4',
     loopVideo: 'scene_03_matching_02_loop_waiting.mp4',
-    apprecationVideo: 'scene_03_matching_03_appreciation.mp4'
+    apprecationVideo: 'scene_03_matching_03_appreciation.mp4',
+    appreciationVideo: 'scene_03_matching_03_appreciation.mp4'
   },
   {
     id: 'scene_05',

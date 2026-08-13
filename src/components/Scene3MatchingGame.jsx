@@ -24,9 +24,9 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
     return window.__zooBlobUrls?.[path] || path;
   };
 
-  const introVideoSrc = resolveMediaUrl(`/Videos/${sceneData.introVideo}`);
-  const loopVideoSrc = resolveMediaUrl(`/Videos/${sceneData.loopVideo}`);
-  const apprecVideoSrc = resolveMediaUrl(`/Videos/${sceneData.apprecationVideo}`);
+  const introVideoSrc = resolveMediaUrl(`/Videos/${sceneData.introVideo || 'scene_03_matching_01_intro.mp4'}`);
+  const loopVideoSrc = resolveMediaUrl(`/Videos/${sceneData.loopVideo || 'scene_03_matching_02_loop_waiting.mp4'}`);
+  const apprecVideoSrc = resolveMediaUrl(`/Videos/${sceneData.apprecationVideo || sceneData.appreciationVideo || 'scene_03_matching_03_appreciation.mp4'}`);
 
   const animals = [
     { id: 'elephant', name: 'Elephant', image: '/images/Elephant.png', targetFood: 'fruits', emoji: '🐘' },
@@ -225,7 +225,14 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
       </header>
 
       {/* Main Video & Interactive Canvas */}
-      <div className="matching-aspect-container glass-panel">
+      <div 
+        className="matching-aspect-container glass-panel"
+        onClick={() => {
+          if (phase === 'intro') {
+            setPhase('playing');
+          }
+        }}
+      >
         {/* Intro Video Player */}
         <video
           ref={videoIntroRef}
@@ -234,6 +241,10 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
           preload="auto"
           playsInline
           onEnded={() => setPhase('playing')}
+          onError={(e) => {
+            console.warn("Intro video load error, advancing to playing mode:", e);
+            setPhase('playing');
+          }}
         />
 
         {/* Looping Waiting Video Player */}
