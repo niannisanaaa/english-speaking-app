@@ -1,0 +1,329 @@
+/* ==========================================================================
+   SCENE 3: MATCHING GAME & ANIMAL FEEDING STYLES
+   ========================================================================== */
+
+.scene3-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scene3-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 20;
+}
+
+.matches-counter-badge {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  padding: 6px 18px;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.25);
+}
+
+.matching-aspect-container {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #0f172a;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+/* MATCHING GRID OVERLAY */
+.matching-grid-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  padding: 24px 32px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.cards-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+  max-width: 860px;
+  pointer-events: auto;
+}
+
+/* INDIVIDUAL MATCHING CARDS */
+.matching-card {
+  flex: 1;
+  max-width: 220px;
+  height: 145px;
+  cursor: pointer;
+  perspective: 1000px;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: auto;
+}
+
+.matching-card:hover {
+  transform: translateY(-6px) scale(1.04);
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.card-img {
+  max-height: 80px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15));
+}
+
+.card-label {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #0f172a;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* GREEN GLOW FOR SELECTED CARD */
+.matching-card.card-selected .card-inner {
+  background: rgba(34, 197, 94, 0.25);
+  border-color: #22c55e;
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.6), inset 0 0 15px rgba(34, 197, 94, 0.3);
+  transform: scale(1.05);
+}
+
+/* RED GLOW & SHAKE ANIMATION FOR WRONG MATCH */
+.matching-card.card-wrong .card-inner {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
+  box-shadow: 0 0 35px rgba(239, 68, 68, 0.7);
+  animation: shakeRed 0.4s ease-in-out;
+}
+
+@keyframes shakeRed {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-12px); }
+  40% { transform: translateX(12px); }
+  60% { transform: translateX(-8px); }
+  80% { transform: translateX(8px); }
+}
+
+/* SOLVED / COMPLETED CARD */
+.matching-card.card-completed {
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.matching-card.card-completed .card-inner {
+  background: rgba(241, 245, 249, 0.9);
+  border-color: #4ade80;
+}
+
+.matched-food-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #4ade80;
+  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: popBadge 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popBadge {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+.matched-food-img {
+  max-width: 30px;
+  max-height: 30px;
+  object-fit: contain;
+}
+
+/* FLYING FOOD ANIMATION */
+.matching-card.card-flying {
+  animation: floatUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  z-index: 30;
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  50% { transform: translateY(-120px) scale(1.15); opacity: 0.8; }
+  100% { transform: translateY(-200px) scale(0.4); opacity: 0; }
+}
+
+/* ==========================================================================
+   APPRECIATION PHASE: 3D GOLDEN STAR COINS CELEBRATION
+   ========================================================================== */
+.star-coins-celebration-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  z-index: 25;
+  animation: fadeInApprec 0.5s ease-out;
+}
+
+@keyframes fadeInApprec {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.stars-title-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 32px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid rgba(251, 191, 36, 0.6);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(251, 191, 36, 0.3);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: #ffffff;
+}
+
+/* 3D STAR COINS ROW */
+.star-coins-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 36px;
+}
+
+.star-coin-item {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.earned-star {
+  animation: bounceCoin 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes bounceCoin {
+  0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+  70% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.unearned-star {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.coin-3d-body {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fde047 0%, #eab308 60%, #ca8a04 100%);
+  border: 6px solid #fef08a;
+  box-shadow: 0 16px 36px rgba(234, 179, 8, 0.5), inset 0 -8px 0 rgba(161, 98, 7, 0.6), inset 0 8px 0 rgba(254, 240, 138, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.star-icon {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.apprec-actions-row {
+  display: flex;
+  gap: 20px;
+}
+
+.apprec-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.05rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.replay-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+}
+
+.replay-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
+}
+
+.next-btn {
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  color: white;
+  box-shadow: 0 8px 24px rgba(56, 189, 248, 0.4);
+}
+
+.next-btn:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 12px 32px rgba(56, 189, 248, 0.6);
+}

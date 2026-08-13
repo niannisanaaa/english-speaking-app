@@ -3,6 +3,7 @@ import { SCENE_CONFIG } from './scenesConfig';
 import ResponsiveVideoCanvas from './components/ResponsiveVideoCanvas';
 import Scene2InteractiveZoo from './components/Scene2InteractiveZoo';
 import Scene3ISpyQuiz from './components/Scene3ISpyQuiz';
+import Scene3MatchingGame from './components/Scene3MatchingGame';
 import Scene51on1Practice from './components/Scene51on1Practice';
 import { Sparkles, MapPin, Maximize2, Minimize2, X, Zap, HardDrive, Wifi } from 'lucide-react';
 import './App.css';
@@ -76,14 +77,16 @@ export default function App() {
       '/Videos/scene_02_fish_06_speak_prompt.mp4',
       '/Videos/scene_02_fish_08_speech_success.mp4',
 
-      // Scene 3 I Spy Quiz Videos
-      '/Videos/scene_03_ispy_01_intro_dialogue.mp4',
-      '/Videos/scene_03_ispy_02_prompt_panda.mp4',
-      '/Videos/scene_03_ispy_03_prompt_lion.mp4',
-      '/Videos/scene_03_ispy_loop_waiting_click.mp4',
-      '/Videos/scene_03_ispy_milo_tap_prompt.mp4',
-      '/Videos/scene_03_ispy_feedback_correct.mp4',
-      '/Videos/scene_03_ispy_feedback_wrong.mp4',
+      // Scene 3 Matching Activity Videos & Audios
+      '/Videos/scene_03_matching_01_intro.mp4',
+      '/Videos/scene_03_matching_02_loop_waiting.mp4',
+      '/Videos/scene_03_matching_03_appreciation.mp4',
+      '/Audio/lion.mp3',
+      '/Audio/panda.mp3',
+      '/Audio/elephant.mp3',
+      '/Audio/meat.mp3',
+      '/Audio/bamboo.mp3',
+      '/Audio/fruits.mp3',
 
       // Scene 5 1-on-1 Milo Practice Videos & Audios
       '/Videos/scene_05_milo intro.mp4',
@@ -384,6 +387,14 @@ export default function App() {
             />
           ) : activeScene.type === 'interactive_zoo' ? (
             <Scene2InteractiveZoo
+              sceneData={activeScene}
+              onNextScene={handleNextScene}
+              onPrevScene={handlePrevScene}
+              hasPrevScene={currentSceneIdx > 0}
+              hasNextScene={currentSceneIdx < SCENE_CONFIG.length - 1}
+            />
+          ) : activeScene.type === 'matching' ? (
+            <Scene3MatchingGame
               sceneData={activeScene}
               onNextScene={handleNextScene}
               onPrevScene={handlePrevScene}
