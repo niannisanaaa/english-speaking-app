@@ -87,6 +87,7 @@ export default function App() {
       '/Audio/meat.mp3',
       '/Audio/bamboo.mp3',
       '/Audio/fruits.mp3',
+      '/images/Coin.png',
 
       // Scene 5 1-on-1 Milo Practice Videos & Audios
       '/Videos/scene_05_milo intro.mp4',

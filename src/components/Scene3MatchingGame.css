@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SCENE 3: MATCHING GAME & ANIMAL FEEDING STYLES
+   SCENE 3: MATCHING GAME & ANIMAL FEEDING STYLES (ISPY FLASHCARD DESIGN)
    ========================================================================== */
 
 .scene3-wrapper {
@@ -76,68 +76,76 @@
   pointer-events: auto;
 }
 
-/* INDIVIDUAL MATCHING CARDS */
-.matching-card {
+/* ISPY FLASHCARD DESIGN (MATCHED WITH CARD.SVG) */
+.matching-card.ispy-card-style {
   flex: 1;
   max-width: 220px;
   height: 145px;
   cursor: pointer;
   perspective: 1000px;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: auto;
 }
 
-.matching-card:hover {
-  transform: translateY(-6px) scale(1.04);
+.matching-card.ispy-card-style:hover {
+  transform: translateY(-6px) scale(1.05);
 }
 
-.card-inner {
+.ispy-card-inner {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  border: 3px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  border-radius: 28px;
+  background: linear-gradient(135deg, #FFE3A7 0%, #FFB3A7 100%);
+  border: 4px solid #ffffff;
+  box-shadow: 0 12px 30px rgba(255, 140, 105, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.8);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px;
+  padding: 10px;
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
 .card-img {
-  max-height: 80px;
+  max-height: 75px;
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15));
 }
 
-.card-label {
+.card-label-badge {
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 999px;
+  padding: 3px 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-label-badge span {
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #0f172a;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 /* GREEN GLOW FOR SELECTED CARD */
-.matching-card.card-selected .card-inner {
-  background: rgba(34, 197, 94, 0.25);
+.matching-card.card-selected .ispy-card-inner {
+  background: linear-gradient(135deg, #bbf7d0 0%, #4ade80 100%);
   border-color: #22c55e;
-  box-shadow: 0 0 30px rgba(34, 197, 94, 0.6), inset 0 0 15px rgba(34, 197, 94, 0.3);
-  transform: scale(1.05);
+  box-shadow: 0 0 35px rgba(34, 197, 94, 0.8), 0 12px 30px rgba(34, 197, 94, 0.4);
+  transform: scale(1.06);
 }
 
 /* RED GLOW & SHAKE ANIMATION FOR WRONG MATCH */
-.matching-card.card-wrong .card-inner {
-  background: rgba(239, 68, 68, 0.3);
+.matching-card.card-wrong .ispy-card-inner {
+  background: linear-gradient(135deg, #fecaca 0%, #f87171 100%);
   border-color: #ef4444;
-  box-shadow: 0 0 35px rgba(239, 68, 68, 0.7);
+  box-shadow: 0 0 35px rgba(239, 68, 68, 0.8), 0 12px 30px rgba(239, 68, 68, 0.4);
   animation: shakeRed 0.4s ease-in-out;
 }
 
@@ -151,13 +159,13 @@
 
 /* SOLVED / COMPLETED CARD */
 .matching-card.card-completed {
-  opacity: 0.9;
   pointer-events: none;
 }
 
-.matching-card.card-completed .card-inner {
-  background: rgba(241, 245, 249, 0.9);
+.matching-card.card-completed .ispy-card-inner {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
   border-color: #4ade80;
+  opacity: 0.95;
 }
 
 .matched-food-badge {
@@ -168,8 +176,8 @@
   height: 44px;
   border-radius: 50%;
   background: #ffffff;
-  border: 2px solid #4ade80;
-  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.4);
+  border: 2.5px solid #4ade80;
+  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -187,20 +195,38 @@
   object-fit: contain;
 }
 
-/* FLYING FOOD ANIMATION */
-.matching-card.card-flying {
-  animation: floatUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  z-index: 30;
+/* HIDDEN FOOD CARD CONTAINER ON MATCH */
+.matching-card.card-placeholder-hidden {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
 }
 
-@keyframes floatUp {
+.matching-card.card-container-disappearing {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+/* ONLY FOOD IMAGE FLOATING UP TO ANIMAL */
+.only-food-img-floating {
+  max-height: 90px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.3));
+  animation: floatOnlyImgUp 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  z-index: 40;
+}
+
+@keyframes floatOnlyImgUp {
   0% { transform: translateY(0) scale(1); opacity: 1; }
-  50% { transform: translateY(-120px) scale(1.15); opacity: 0.8; }
-  100% { transform: translateY(-200px) scale(0.4); opacity: 0; }
+  50% { transform: translateY(-130px) scale(1.2); opacity: 0.9; }
+  100% { transform: translateY(-210px) scale(0.5); opacity: 0; }
 }
 
 /* ==========================================================================
-   APPRECIATION PHASE: 3D GOLDEN STAR COINS CELEBRATION (NO BLUR!)
+   APPRECIATION PHASE: 3D GOLDEN COIN.PNG STARS CELEBRATION (NO BLUR, NO LOOP!)
    ========================================================================== */
 .star-coins-celebration-overlay {
   position: absolute;
@@ -239,7 +265,7 @@
   color: #ffffff;
 }
 
-/* 3D STAR COINS ROW */
+/* 3D STAR COINS ROW (USES /images/Coin.png) */
 .star-coins-row {
   display: flex;
   justify-content: center;
@@ -248,14 +274,21 @@
 }
 
 .star-coin-item {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
+  width: 110px;
+  height: 110px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.coin-png-img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 25px rgba(234, 179, 8, 0.6));
+  transition: all 0.3s ease;
 }
 
 .earned-star {
@@ -264,30 +297,17 @@
 
 @keyframes bounceCoin {
   0% { transform: scale(0) rotate(-45deg); opacity: 0; }
-  70% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+  70% { transform: scale(1.25) rotate(10deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
 .unearned-star {
-  opacity: 0.35;
-  filter: grayscale(1);
+  opacity: 0.3;
 }
 
-.coin-3d-body {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fde047 0%, #eab308 60%, #ca8a04 100%);
-  border: 6px solid #fef08a;
-  box-shadow: 0 16px 36px rgba(234, 179, 8, 0.5), inset 0 -8px 0 rgba(161, 98, 7, 0.6), inset 0 8px 0 rgba(254, 240, 138, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.star-icon {
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+.unearned-star .coin-png-img {
+  filter: grayscale(1) opacity(0.3);
+  box-shadow: none;
 }
 
 .apprec-actions-row {

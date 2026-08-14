@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, Star, RotateCcw, Volume2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, RotateCcw } from 'lucide-react';
 import { playSuccessChime, playTapChime } from '../utils/soundEffects';
 import './Scene3MatchingGame.css';
 
@@ -13,7 +13,6 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
   const [firstAttemptErrors, setFirstAttemptErrors] = useState(0);
   const [attemptedAnimals, setAttemptedAnimals] = useState([]);
   const [starCount, setStarCount] = useState(3);
-  const [isAudioBlocked, setIsAudioBlocked] = useState(false);
 
   const videoIntroRef = useRef(null);
   const videoLoopRef = useRef(null);
@@ -136,7 +135,7 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
       // SUCCESS MATCH!
       playSuccessChime();
 
-      // Trigger flying food animation
+      // Trigger floating food image animation
       setAnimatingFood({ foodId: selectedFood, targetAnimalId: selectedAnimal });
 
       setTimeout(() => {
@@ -154,7 +153,7 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
         setSelectedAnimal(null);
         setSelectedFood(null);
         setAnimatingFood(null);
-      }, 600);
+      }, 650);
 
     } else {
       // WRONG MATCH!
@@ -241,10 +240,7 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
           preload="auto"
           playsInline
           onEnded={() => setPhase('playing')}
-          onError={(e) => {
-            console.warn("Intro video load error, advancing to playing mode:", e);
-            setPhase('playing');
-          }}
+          onError={() => setPhase('playing')}
         />
 
         {/* Looping Waiting Video Player */}
@@ -258,12 +254,12 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
           playsInline
         />
 
-        {/* Appreciation Video Player */}
+        {/* Appreciation Video Player (Plays ONCE, non-looping!) */}
         <video
           ref={videoApprecRef}
           src={apprecVideoSrc}
           className={`main-video-player ${phase === 'appreciation' ? 'video-active' : 'video-hidden'}`}
-          loop
+          loop={false}
           preload="auto"
           playsInline
         />
@@ -271,7 +267,7 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
         {/* PLAYING PHASE: 6-CARD MATCHING GRID OVERLAY */}
         {phase === 'playing' && (
           <div className="matching-grid-overlay">
-            {/* TOP ROW: ANIMAL TARGET CARDS */}
+            {/* TOP ROW: ANIMAL TARGET CARDS (ISPY FLASHCARD STYLE) */}
             <div className="cards-row animals-row">
               {animals.map(animal => {
                 const isMatched = completedMatches.includes(animal.id);
@@ -281,14 +277,16 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
                 return (
                   <div
                     key={animal.id}
-                    className={`matching-card animal-card ${isMatched ? 'card-completed' : ''} ${isSelected ? 'card-selected' : ''} ${isWrong ? 'card-wrong' : ''}`}
+                    className={`matching-card ispy-card-style animal-card ${isMatched ? 'card-completed' : ''} ${isSelected ? 'card-selected' : ''} ${isWrong ? 'card-wrong' : ''}`}
                     onClick={() => handleAnimalClick(animal.id)}
                   >
-                    <div className="card-inner glass-panel">
+                    <div className="ispy-card-inner">
                       <img src={animal.image} alt={animal.name} className="card-img" />
-                      <span className="card-label">{animal.name}</span>
+                      <div className="card-label-badge">
+                        <span>{animal.name}</span>
+                      </div>
 
-                      {/* Display matched food icon if solved */}
+                      {/* Display matched food icon when solved */}
                       {isMatched && (
                         <div className="matched-food-badge">
                           <img 
@@ -315,16 +313,32 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
                 const isWrong = wrongPair?.foodId === food.id;
                 const isFlying = animatingFood?.foodId === food.id;
 
+                // Hide food card container once matched!
+                if (isMatched) {
+                  return <div key={food.id} className="matching-card food-card card-placeholder-hidden" />;
+                }
+
                 return (
                   <div
                     key={food.id}
-                    className={`matching-card food-card ${isMatched ? 'card-completed' : ''} ${isSelected ? 'card-selected' : ''} ${isWrong ? 'card-wrong' : ''} ${isFlying ? 'card-flying' : ''}`}
+                    className={`matching-card ispy-card-style food-card ${isSelected ? 'card-selected' : ''} ${isWrong ? 'card-wrong' : ''} ${isFlying ? 'card-container-disappearing' : ''}`}
                     onClick={() => handleFoodClick(food.id)}
                   >
-                    <div className="card-inner glass-panel">
-                      <img src={food.image} alt={food.name} className="card-img" />
-                      <span className="card-label">{food.name}</span>
-                    </div>
+                    {/* If animating/flying -> Container card hides, ONLY food image floats up! */}
+                    {isFlying ? (
+                      <img 
+                        src={food.image} 
+                        alt={food.name} 
+                        className="only-food-img-floating" 
+                      />
+                    ) : (
+                      <div className="ispy-card-inner">
+                        <img src={food.image} alt={food.name} className="card-img" />
+                        <div className="card-label-badge">
+                          <span>{food.name}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -332,7 +346,7 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
           </div>
         )}
 
-        {/* APPRECIATION PHASE: 3D GOLDEN STAR COINS CELEBRATION OVERLAY */}
+        {/* APPRECIATION PHASE: 3D GOLDEN COIN.PNG STARS CELEBRATION OVERLAY */}
         {phase === 'appreciation' && (
           <div className="star-coins-celebration-overlay">
             <div className="stars-title-badge glass-panel">
@@ -340,7 +354,7 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
               <span>GREAT JOB FEEDING ALL ANIMALS!</span>
             </div>
 
-            {/* 3D STAR COINS CONTAINER */}
+            {/* 3D STAR COINS ROW (USES /images/Coin.png) */}
             <div className="star-coins-row">
               {[1, 2, 3].map((starIndex) => {
                 const isEarned = starIndex <= starCount;
@@ -350,13 +364,11 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
                     className={`star-coin-item ${isEarned ? 'earned-star' : 'unearned-star'}`}
                     style={{ animationDelay: `${starIndex * 0.25}s` }}
                   >
-                    <div className="coin-3d-body">
-                      <Star 
-                        size={56} 
-                        className={`star-icon ${isEarned ? 'star-gold' : 'star-gray'}`}
-                        fill={isEarned ? '#fbbf24' : 'rgba(255, 255, 255, 0.2)'}
-                      />
-                    </div>
+                    <img 
+                      src="/images/Coin.png" 
+                      alt="Star Coin" 
+                      className="coin-png-img" 
+                    />
                   </div>
                 );
               })}
