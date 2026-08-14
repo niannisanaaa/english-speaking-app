@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { playSuccessChime, playTapChime } from '../utils/soundEffects';
 import './Scene3MatchingGame.css';
 
@@ -100,10 +100,6 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
         safePlayVideo(videoApprecRef.current, false);
       }
       // Compute Star Count based on First Attempt Errors
-      // 3 animals total:
-      // 0 errors -> 3 Stars
-      // 1-2 errors -> 2 Stars
-      // 3+ errors (failed all 3 on first try) -> 1 Star
       if (firstAttemptErrors >= 3) {
         setStarCount(1);
       } else if (firstAttemptErrors >= 1) {
@@ -119,7 +115,6 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
     if (!selectedAnimal || !selectedFood) return;
 
     const animalObj = animals.find(a => a.id === selectedAnimal);
-    const foodObj = foods.find(f => f.id === selectedFood);
 
     const isMatch = animalObj.targetFood === selectedFood;
 
@@ -156,14 +151,14 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
       }, 650);
 
     } else {
-      // WRONG MATCH!
+      // WRONG MATCH! Transform color block to RED for 1 second (1000ms) then revert!
       setWrongPair({ animalId: selectedAnimal, foodId: selectedFood });
 
       setTimeout(() => {
         setWrongPair(null);
         setSelectedAnimal(null);
         setSelectedFood(null);
-      }, 650);
+      }, 1000); // Exactly 1 second duration
     }
   }, [selectedAnimal, selectedFood]);
 
@@ -184,17 +179,6 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
     const foodObj = foods.find(f => f.id === foodId);
     speakCardName(foodObj.name, foodId);
     setSelectedFood(foodId);
-  };
-
-  const handleRestart = () => {
-    setCompletedMatches([]);
-    setSelectedAnimal(null);
-    setSelectedFood(null);
-    setWrongPair(null);
-    setAnimatingFood(null);
-    setFirstAttemptErrors(0);
-    setAttemptedAnimals([]);
-    setPhase('playing');
   };
 
   return (
@@ -229,6 +213,8 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
         onClick={() => {
           if (phase === 'intro') {
             setPhase('playing');
+          } else if (phase === 'appreciation' && hasNextScene) {
+            onNextScene();
           }
         }}
       >
@@ -262,12 +248,19 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
           loop={false}
           preload="auto"
           playsInline
+          onEnded={() => {
+            if (hasNextScene) {
+              setTimeout(() => {
+                onNextScene();
+              }, 4000);
+            }
+          }}
         />
 
         {/* PLAYING PHASE: 6-CARD MATCHING GRID OVERLAY */}
         {phase === 'playing' && (
           <div className="matching-grid-overlay">
-            {/* TOP ROW: ANIMAL TARGET CARDS (ISPY FLASHCARD STYLE) */}
+            {/* TOP ROW: ANIMAL TARGET CARDS (374/388 RATIO) */}
             <div className="cards-row animals-row">
               {animals.map(animal => {
                 const isMatched = completedMatches.includes(animal.id);
@@ -340,10 +333,10 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
           </div>
         )}
 
-        {/* APPRECIATION PHASE: 3D GOLDEN COIN.PNG STARS CELEBRATION OVERLAY */}
+        {/* APPRECIATION PHASE: REWARD PAGE WITH MATCHED CARDS (NO BUTTONS, NO TEXT!) */}
         {phase === 'appreciation' && (
           <div className="star-coins-celebration-overlay">
-            {/* 3D STAR COINS ROW (1.5x BIGGER, NO TITLE TEXT!) */}
+            {/* 3D STAR COINS ROW (1.5x BIGGER COIN.PNG) */}
             <div className="star-coins-row">
               {[1, 2, 3].map((starIndex) => {
                 const isEarned = starIndex <= starCount;
@@ -363,19 +356,34 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
               })}
             </div>
 
-            {/* Action Buttons */}
-            <div className="apprec-actions-row">
-              <button className="apprec-btn replay-btn" onClick={handleRestart}>
-                <RotateCcw size={18} />
-                <span>Play Again</span>
-              </button>
+            {/* MATCHED CARDS ROW (MATCHING THE ATTACHED IMAGE SPECIFICATION!) */}
+            <div className="reward-matched-cards-row">
+              {/* Card 1: Elephant + Fruits */}
+              <div className="reward-matched-card">
+                <div className="reward-card-pill-header" />
+                <div className="reward-card-img-pair">
+                  <img src="/images/Elephant.png" alt="Elephant" className="reward-animal-img" />
+                  <img src="/images/Fruits.png" alt="Fruits" className="reward-food-img" />
+                </div>
+              </div>
 
-              {hasNextScene && (
-                <button className="apprec-btn next-btn" onClick={onNextScene}>
-                  <span>Next Adventure 🚀</span>
-                  <ChevronRight size={20} />
-                </button>
-              )}
+              {/* Card 2: Lion + Meat */}
+              <div className="reward-matched-card">
+                <div className="reward-card-pill-header" />
+                <div className="reward-card-img-pair">
+                  <img src="/images/Lion.png" alt="Lion" className="reward-animal-img" />
+                  <img src="/images/Meat.png" alt="Meat" className="reward-food-img" />
+                </div>
+              </div>
+
+              {/* Card 3: Panda + Bamboo */}
+              <div className="reward-matched-card">
+                <div className="reward-card-pill-header" />
+                <div className="reward-card-img-pair">
+                  <img src="/images/Panda.png" alt="Panda" className="reward-animal-img" />
+                  <img src="/images/Bamboo.png" alt="Bamboo" className="reward-food-img" />
+                </div>
+              </div>
             </div>
           </div>
         )}
