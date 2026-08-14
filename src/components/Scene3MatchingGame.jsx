@@ -282,9 +282,6 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
                   >
                     <div className="ispy-card-inner">
                       <img src={animal.image} alt={animal.name} className="card-img" />
-                      <div className="card-label-badge">
-                        <span>{animal.name}</span>
-                      </div>
 
                       {/* Display matched food icon when solved */}
                       {isMatched && (
@@ -334,9 +331,6 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
                     ) : (
                       <div className="ispy-card-inner">
                         <img src={food.image} alt={food.name} className="card-img" />
-                        <div className="card-label-badge">
-                          <span>{food.name}</span>
-                        </div>
                       </div>
                     )}
                   </div>
@@ -349,12 +343,7 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
         {/* APPRECIATION PHASE: 3D GOLDEN COIN.PNG STARS CELEBRATION OVERLAY */}
         {phase === 'appreciation' && (
           <div className="star-coins-celebration-overlay">
-            <div className="stars-title-badge glass-panel">
-              <Sparkles size={24} color="#fbbf24" />
-              <span>GREAT JOB FEEDING ALL ANIMALS!</span>
-            </div>
-
-            {/* 3D STAR COINS ROW (USES /images/Coin.png) */}
+            {/* 3D STAR COINS ROW (1.5x BIGGER, NO TITLE TEXT!) */}
             <div className="star-coins-row">
               {[1, 2, 3].map((starIndex) => {
                 const isEarned = starIndex <= starCount;
