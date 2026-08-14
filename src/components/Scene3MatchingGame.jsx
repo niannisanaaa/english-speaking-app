@@ -226,7 +226,7 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
 
       {/* Main Video & Interactive Canvas */}
       <div 
-        className="matching-aspect-container glass-panel"
+        className="video-aspect-container glass-panel"
         onClick={() => {
           if (phase === 'intro') {
             setPhase('playing');
