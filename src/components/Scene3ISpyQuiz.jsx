@@ -227,7 +227,8 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
           setQuestionIdx(prev => prev + 1);
           setQuizState('prompt');
         } else {
-          setQuizState('outro');
+          // All questions complete! Automatically advance directly to Scene 3B Matching Activity!
+          if (onNextScene) onNextScene();
         }
         break;
       case 'feedback_wrong':

@@ -23,6 +23,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
   const micStreamRef = useRef(null);
   const recognitionRef = useRef(null);
   const speechSuccessRef = useRef(false);
+  const stepIndexRef = useRef(0);
 
   const steps = sceneData.steps;
   const totalSteps = steps.length;
@@ -30,6 +31,11 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
   // Clamp stepIndex strictly within valid bounds [0, totalSteps - 1]
   const safeStepIdx = Math.min(Math.max(0, stepIndex), totalSteps - 1);
   const currentStep = steps[safeStepIdx];
+
+  // Keep stepIndexRef in sync with safeStepIdx at all times
+  useEffect(() => {
+    stepIndexRef.current = safeStepIdx;
+  }, [safeStepIdx]);
 
   const resolveMediaUrl = (path) => {
     return window.__zooBlobUrls?.[path] || path;
@@ -77,9 +83,10 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
 
     if (isCompleted) return;
 
+    const currentStepIdx = safeStepIdx;
     const isTalk = currentStep.type === 'milo_talking';
 
-    // Direct, guaranteed Video Switch: Player 0 (Talk) vs Player 1 (Idle)
+    // Guaranteed Video Switch: Player 0 (Talk) vs Player 1 (Idle)
     if (isTalk) {
       if (videoIdleRef.current) videoIdleRef.current.pause();
       if (videoTalkRef.current) {
@@ -98,7 +105,6 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
     if (isTalk && currentStep.audio) {
       const targetAudioUrl = resolveMediaUrl(`/Audio/${currentStep.audio}`);
 
-      // ONLY instantiate and play if this audio track isn't already playing!
       if (currentAudioUrlRef.current !== targetAudioUrl) {
         stopAudioTrack();
         currentAudioUrlRef.current = targetAudioUrl;
@@ -107,19 +113,24 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
         audioRef.current = audio;
 
         audio.onended = () => {
-          console.log(`Audio for step ${safeStepIdx} (${currentStep.audio}) finished 100%.`);
+          console.log(`Audio for step ${currentStepIdx} (${currentStep.audio}) finished 100%.`);
           stopAudioTrack();
 
-          if (safeStepIdx < totalSteps - 1) {
-            setStepIndex(safeStepIdx + 1);
-          } else {
-            console.log("Scene 5 conversation completed!");
-            setIsCompleted(true);
-            if (onNextScene) onNextScene();
+          // Guard against stale stepIndex callbacks!
+          if (stepIndexRef.current === currentStepIdx) {
+            setStepIndex(prev => {
+              if (prev < totalSteps - 1) {
+                return prev + 1;
+              } else {
+                console.log("Scene 5 conversation completed!");
+                setIsCompleted(true);
+                if (onNextScene) onNextScene();
+                return prev;
+              }
+            });
           }
         };
 
-        // Mobile Browser Audio Autoplay Handler
         audio.play().then(() => {
           setIsAudioBlocked(false);
         }).catch(err => {
@@ -134,10 +145,12 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
     // Speech Recognition & 5s Limit for User Speaking Steps
     let timeoutTimer;
     if (currentStep.type === 'user_speaking') {
-      startSpeechRecognition();
+      startSpeechRecognition(currentStepIdx);
       timeoutTimer = setTimeout(() => {
-        console.log("5s speaking widget limit reached. Advancing to Milo's response...");
-        handleSpeechSuccess();
+        if (stepIndexRef.current === currentStepIdx && !speechSuccessRef.current) {
+          console.log("5s speaking widget limit reached. Advancing to Milo's response...");
+          handleSpeechSuccess(currentStepIdx);
+        }
       }, 5000);
     } else {
       stopSpeechRecognition();
@@ -145,6 +158,8 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
 
     return () => {
       if (timeoutTimer) clearTimeout(timeoutTimer);
+      stopAudioTrack();
+      stopSpeechRecognition();
     };
   }, [safeStepIdx, isCompleted]);
 
@@ -156,28 +171,40 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
     };
   }, []);
 
-  const handleSpeechSuccess = () => {
-    if (currentStep.type !== 'user_speaking') return;
+  const handleSpeechSuccess = (stepIdxTarget) => {
     if (speechSuccessRef.current) return;
+    if (typeof stepIdxTarget === 'number' && stepIndexRef.current !== stepIdxTarget) return;
+
     speechSuccessRef.current = true;
     playSuccessChime();
     stopSpeechRecognition();
 
-    if (safeStepIdx < totalSteps - 1) {
-      setStepIndex(safeStepIdx + 1);
-    } else if (onNextScene) {
-      onNextScene();
-    }
+    setStepIndex(prev => {
+      if (prev < totalSteps - 1) {
+        return prev + 1;
+      } else {
+        setIsCompleted(true);
+        if (onNextScene) onNextScene();
+        return prev;
+      }
+    });
   };
 
   // Web Audio API & Speech Recognition
-  const startSpeechRecognition = () => {
+  const startSpeechRecognition = (stepIdxTarget) => {
+    stopSpeechRecognition();
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (navigator.mediaDevices?.getUserMedia) {
       navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 }
       }).then((stream) => {
+        if (stepIndexRef.current !== stepIdxTarget) {
+          stream.getTracks().forEach(t => t.stop());
+          return;
+        }
+
         micStreamRef.current = stream;
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const audioCtx = new AudioContext();
@@ -191,6 +218,8 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
         let voiceFrames = 0;
 
         const analyze = () => {
+          if (stepIndexRef.current !== stepIdxTarget || speechSuccessRef.current) return;
+
           analyser.getByteFrequencyData(dataArray);
           let sum = 0;
           for (let i = 0; i < dataArray.length; i++) {
@@ -202,8 +231,8 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
           // Voice Activity Detection (VAD)
           if (avg > 30) {
             voiceFrames++;
-            if (voiceFrames >= 25 && !speechSuccessRef.current && currentStep.type === 'user_speaking') {
-              handleSpeechSuccess();
+            if (voiceFrames >= 25 && !speechSuccessRef.current && stepIndexRef.current === stepIdxTarget) {
+              handleSpeechSuccess(stepIdxTarget);
               return;
             }
           } else {
@@ -229,6 +258,8 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
       recognition.lang = 'en-US';
 
       recognition.onresult = (event) => {
+        if (stepIndexRef.current !== stepIdxTarget || speechSuccessRef.current) return;
+
         const rawTranscript = Array.from(event.results)
           .map(result => result[0].transcript)
           .join(' ')
@@ -236,7 +267,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
 
         setSpokenText(rawTranscript);
         if (rawTranscript.trim().length >= 2) {
-          handleSpeechSuccess();
+          handleSpeechSuccess(stepIdxTarget);
         }
       };
 
@@ -245,7 +276,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
       };
 
       recognition.onend = () => {
-        if (currentStep.type === 'user_speaking' && !speechSuccessRef.current) {
+        if (stepIndexRef.current === stepIdxTarget && !speechSuccessRef.current) {
           try { recognition.start(); } catch (e) {}
         }
       };
@@ -372,7 +403,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
               {/* Interactive 3D Mic Image (Tap to trigger match) */}
               <div 
                 className="mic-3d-img-wrapper"
-                onClick={handleSpeechSuccess}
+                onClick={() => handleSpeechSuccess(safeStepIdx)}
                 title="Tap mic to finish turn"
               >
                 <img src="/images/mic_3d.png" alt="Microphone" className="mic-3d-img" />
