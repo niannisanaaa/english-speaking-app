@@ -32,9 +32,27 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
   const successVideoSrc = resolveMediaUrl(`/Videos/${sceneData.successVideo || 'scene_035_dragdrop_05_success.mp4'}`);
 
   const animals = [
-    { id: 'lion', name: 'Lion', targetFood: 'meat', hotspot: { top: '20%', left: '5%', width: '22%', height: '32%' } },
-    { id: 'panda', name: 'Panda', targetFood: 'bamboo', hotspot: { top: '15%', left: '26%', width: '18%', height: '25%' } },
-    { id: 'elephant', name: 'Elephant', targetFood: 'fruits', hotspot: { top: '28%', left: '74%', width: '22%', height: '38%' } }
+    { 
+      id: 'lion', 
+      name: 'Lion', 
+      targetFood: 'meat', 
+      hotspot: { top: '30%', left: '8%', width: '16vw', height: '16vw' },
+      basketPos: { top: '48%', left: '16%' }
+    },
+    { 
+      id: 'panda', 
+      name: 'Panda', 
+      targetFood: 'bamboo', 
+      hotspot: { top: '18%', left: '36%', width: '17vw', height: '17vw' },
+      basketPos: { top: '38%', left: '46%' }
+    },
+    { 
+      id: 'elephant', 
+      name: 'Elephant', 
+      targetFood: 'fruits', 
+      hotspot: { top: '26%', left: '65%', width: '16vw', height: '16vw' },
+      basketPos: { top: '48%', left: '76%' }
+    }
   ];
 
   const foods = [
@@ -146,7 +164,7 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
       }, 500);
 
     } else {
-      // WRONG MATCH!
+      // WRONG MATCH! Play wrong feedback video immediately
       setPhase('wrong_feedback');
       setSelectedAnimal(null);
       setSelectedFood(null);
@@ -251,7 +269,7 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
         <video
           ref={videoLoopRef}
           src={loopVideoSrc}
-          className={`main-video-player ${phase === 'playing' ? 'video-active' : 'video-hidden'}`}
+          className={`main-video-player ${(phase === 'playing' || phase === 'correct_feedback' || phase === 'wrong_feedback') ? 'video-active' : 'video-hidden'}`}
           loop
           muted
           preload="auto"
@@ -294,9 +312,9 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
         />
 
         {/* PLAYING PHASE: HOTSPOTS & DRAG/DROP OVERLAY */}
-        {phase === 'playing' && (
+        {(phase === 'playing' || phase === 'correct_feedback' || phase === 'wrong_feedback') && (
           <div className="dragdrop-interactive-overlay">
-            {/* ANIMAL DROP HOTSPOT TARGETS */}
+            {/* ANIMAL DROP HOTSPOT TARGETS (100% INVISIBLE CIRCLES, NO TEXT) */}
             {animals.map(animal => {
               const isMatched = completedMatches.includes(animal.id);
               const isSelected = selectedAnimal === animal.id;
@@ -318,7 +336,29 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
               );
             })}
 
-            {/* BOTTOM ROAD: WHITE RADIAL GLOW FOOD ITEMS */}
+            {/* MATCHED FOOD ITEMS STAY INSIDE ANIMAL FEEDING BASKETS */}
+            {animals.map(animal => {
+              const isMatched = completedMatches.includes(animal.id);
+              if (!isMatched) return null;
+
+              const matchedFoodObj = foods.find(f => f.targetAnimal === animal.id);
+              if (!matchedFoodObj) return null;
+
+              return (
+                <div 
+                  key={`basket-${animal.id}`}
+                  className="matched-basket-food-item"
+                  style={{
+                    top: animal.basketPos.top,
+                    left: animal.basketPos.left
+                  }}
+                >
+                  <img src={matchedFoodObj.image} alt={matchedFoodObj.name} className="basket-food-img" />
+                </div>
+              );
+            })}
+
+            {/* BOTTOM ROAD: WHITE RADIAL GLOW FOOD ITEMS (ENLARGED RATIO MATCHING MOCKUP) */}
             <div className="bottom-food-road-row">
               {foods.map(food => {
                 const isMatched = completedMatches.some(aId => {
