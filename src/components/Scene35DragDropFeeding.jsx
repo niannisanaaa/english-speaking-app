@@ -36,21 +36,21 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
       id: 'lion', 
       name: 'Lion', 
       targetFood: 'meat', 
-      hotspot: { top: '30%', left: '8%', width: '16vw', height: '16vw' },
+      hotspot: { top: '18%', left: '2%', width: '28vw', height: '28vw' },
       basketPos: { top: '48%', left: '16%' }
     },
     { 
       id: 'panda', 
       name: 'Panda', 
       targetFood: 'bamboo', 
-      hotspot: { top: '18%', left: '36%', width: '17vw', height: '17vw' },
+      hotspot: { top: '8%', left: '30%', width: '30vw', height: '30vw' },
       basketPos: { top: '38%', left: '46%' }
     },
     { 
       id: 'elephant', 
       name: 'Elephant', 
       targetFood: 'fruits', 
-      hotspot: { top: '26%', left: '65%', width: '16vw', height: '16vw' },
+      hotspot: { top: '16%', left: '60%', width: '28vw', height: '28vw' },
       basketPos: { top: '48%', left: '76%' }
     }
   ];
@@ -386,10 +386,10 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
           </div>
         )}
 
-        {/* SUCCESS REWARD PAGE: 3D GOLDEN COIN.PNG STARS + MATCHED CARDS (NO BUTTONS, NO TEXT!) */}
+        {/* SUCCESS REWARD PAGE: 3D GOLDEN COIN.PNG STARS (NO BUTTONS, NO TEXT, NO EXTRA CARDS!) */}
         {phase === 'success' && (
           <div className="star-coins-celebration-overlay">
-            {/* 3D STAR COINS ROW (1.5x BIGGER COIN.PNG) */}
+            {/* 3D STAR COINS ROW (MOVED DOWN, NO BACKGROUND DIM!) */}
             <div className="star-coins-row">
               {[1, 2, 3].map((starIndex) => {
                 const isEarned = starIndex <= starCount;
@@ -407,36 +407,6 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
                   </div>
                 );
               })}
-            </div>
-
-            {/* MATCHED CARDS ROW (MATCHING ATTACHED SPECIFICATION MOCKUP!) */}
-            <div className="reward-matched-cards-row">
-              {/* Card 1: Elephant + Fruits */}
-              <div className="reward-matched-card">
-                <div className="reward-card-pill-header" />
-                <div className="reward-card-img-pair">
-                  <img src="/images/Elephant.png" alt="Elephant" className="reward-animal-img" />
-                  <img src="/images/Fruits.png" alt="Fruits" className="reward-food-img" />
-                </div>
-              </div>
-
-              {/* Card 2: Lion + Meat */}
-              <div className="reward-matched-card">
-                <div className="reward-card-pill-header" />
-                <div className="reward-card-img-pair">
-                  <img src="/images/Lion.png" alt="Lion" className="reward-animal-img" />
-                  <img src="/images/Meat.png" alt="Meat" className="reward-food-img" />
-                </div>
-              </div>
-
-              {/* Card 3: Panda + Bamboo */}
-              <div className="reward-matched-card">
-                <div className="reward-card-pill-header" />
-                <div className="reward-card-img-pair">
-                  <img src="/images/Panda.png" alt="Panda" className="reward-animal-img" />
-                  <img src="/images/Bamboo.png" alt="Bamboo" className="reward-food-img" />
-                </div>
-              </div>
             </div>
           </div>
         )}
