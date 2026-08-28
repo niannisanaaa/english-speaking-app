@@ -36,22 +36,22 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
       id: 'lion', 
       name: 'Lion', 
       targetFood: 'meat', 
-      hotspot: { top: '18%', left: '2%', width: '28vw', height: '28vw' },
-      basketPos: { top: '52%', left: '26%' }
+      hotspot: { top: '18%', left: '12%', width: '28vw', height: '28vw' },
+      basketPos: { top: '55.5%', left: '30.5%' }
     },
     { 
       id: 'panda', 
       name: 'Panda', 
       targetFood: 'bamboo', 
-      hotspot: { top: '8%', left: '30%', width: '30vw', height: '30vw' },
-      basketPos: { top: '33%', left: '46.5%' }
+      hotspot: { top: '8%', left: '40%', width: '30vw', height: '30vw' },
+      basketPos: { top: '47%', left: '49.5%' }
     },
     { 
       id: 'elephant', 
       name: 'Elephant', 
       targetFood: 'fruits', 
-      hotspot: { top: '16%', left: '60%', width: '28vw', height: '28vw' },
-      basketPos: { top: '46%', left: '71.5%' }
+      hotspot: { top: '16%', left: '70%', width: '28vw', height: '28vw' },
+      basketPos: { top: '57%', left: '78.5%' }
     }
   ];
 
