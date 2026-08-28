@@ -1,0 +1,253 @@
+/* ==========================================================================
+   SCENE 3.5: DRAG & DROP ZOO FEEDING STYLES (WHITE RADIAL GLOW & HYBRID INPUT)
+   ========================================================================== */
+
+.scene35-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scene35-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 20;
+}
+
+.dragdrop-interactive-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 15;
+}
+
+/* ANIMAL DROP HOTSPOTS ON ZOO BACKGROUND */
+.animal-drop-zone {
+  position: absolute;
+  pointer-events: auto;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.animal-drop-zone.zone-selected {
+  outline: 4px dashed #38bdf8;
+  box-shadow: 0 0 35px rgba(56, 189, 248, 0.8);
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.animal-drop-zone:hover {
+  transform: scale(1.05);
+}
+
+/* BOTTOM ROAD: WHITE RADIAL GLOW FOOD ITEMS */
+.bottom-food-road-row {
+  position: absolute;
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 36px;
+  pointer-events: auto;
+  z-index: 20;
+}
+
+.white-glow-food-item {
+  width: 95px;
+  height: 95px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 0 16px #ffffff) drop-shadow(0 0 28px rgba(255, 255, 255, 0.9));
+  animation: pulseWhiteGlow 2.2s infinite ease-in-out;
+}
+
+@keyframes pulseWhiteGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 12px #ffffff) drop-shadow(0 0 22px rgba(255, 255, 255, 0.8));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 22px #ffffff) drop-shadow(0 0 36px rgba(255, 255, 255, 1));
+    transform: scale(1.06);
+  }
+}
+
+.white-glow-food-item:hover {
+  transform: scale(1.12);
+  cursor: grabbing;
+}
+
+.white-glow-food-item.food-selected {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 24px #38bdf8) drop-shadow(0 0 40px #38bdf8) !important;
+}
+
+.food-glow-img {
+  max-width: 85px;
+  max-height: 85px;
+  object-fit: contain;
+}
+
+/* FLYING FOOD ANIMATION ON MATCH */
+.white-glow-food-item.food-flying {
+  animation: floatFoodUp 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes floatFoodUp {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  50% { transform: translateY(-130px) scale(1.2); opacity: 0.9; }
+  100% { transform: translateY(-210px) scale(0.4); opacity: 0; }
+}
+
+/* ==========================================================================
+   SUCCESS REWARD CELEBRATION OVERLAY (3D COIN.PNG & 3 GREEN MATCHED CARDS)
+   ========================================================================== */
+.star-coins-celebration-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  background: rgba(15, 23, 42, 0.15);
+  border-radius: 24px;
+  z-index: 25;
+  cursor: pointer;
+  animation: fadeInApprec 0.5s ease-out;
+}
+
+@keyframes fadeInApprec {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 3D STAR COINS ROW (1.5x BIGGER COIN.PNG) */
+.star-coins-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+}
+
+.star-coin-item {
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.coin-png-img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 36px rgba(234, 179, 8, 0.7));
+  transition: all 0.3s ease;
+}
+
+.earned-star {
+  animation: bounceCoin 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes bounceCoin {
+  0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+  70% { transform: scale(1.25) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.unearned-star {
+  opacity: 0.3;
+}
+
+.unearned-star .coin-png-img {
+  filter: grayscale(1) opacity(0.3);
+  box-shadow: none;
+}
+
+/* REWARD MATCHED CARDS ROW (MATCHING ATTACHED SPECIFICATION MOCKUP!) */
+.reward-matched-cards-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 28px;
+  z-index: 30;
+  animation: fadeInUpCards 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes fadeInUpCards {
+  from { opacity: 0; transform: translateY(30px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.reward-matched-card {
+  width: 135px;
+  height: 140px;
+  aspect-ratio: 374 / 388;
+  border-radius: 32px;
+  background: #4ade80;
+  border: 4px solid #ffffff;
+  box-shadow: 0 16px 40px rgba(74, 222, 128, 0.5), 0 8px 24px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.reward-card-pill-header {
+  width: 60%;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  margin-bottom: 6px;
+}
+
+.reward-card-img-pair {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+}
+
+.reward-animal-img {
+  max-height: 80px;
+  max-width: 60px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+}
+
+.reward-food-img {
+  max-height: 55px;
+  max-width: 50px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+}

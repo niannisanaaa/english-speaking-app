@@ -82,6 +82,12 @@ export const SCENE_CONFIG = [
             isLoop: false
           },
           {
+            id: 'detail_feed',
+            name: 'scene_02_lion_05_detail_feed.mp4',
+            title: 'Feeding Lion',
+            isLoop: false
+          },
+          {
             id: 'speak_prompt',
             name: 'scene_02_lion_06_speak_prompt.mp4',
             title: 'Can you say Lion?',
@@ -169,6 +175,12 @@ export const SCENE_CONFIG = [
             id: 'detail_explain',
             name: 'scene_02_elephant_05_detail_explain.mp4',
             title: 'Elephant Facts',
+            isLoop: false
+          },
+          {
+            id: 'detail_feed',
+            name: 'scene_02_elephant_05_detail_feed.mp4',
+            title: 'Feeding Elephant',
             isLoop: false
           },
           {
@@ -318,6 +330,17 @@ export const SCENE_CONFIG = [
     loopVideo: 'scene_03_matching_02_loop_waiting.mp4',
     apprecationVideo: 'scene_03_matching_03_appreciation.mp4',
     appreciationVideo: 'scene_03_matching_03_appreciation.mp4'
+  },
+  {
+    id: 'scene_03_5_dragdrop',
+    title: 'Scene 3.5: Drag & Drop Zoo Feeding',
+    type: 'dragdrop_feeding',
+    titleText: 'Drag & Drop to Feed Animals!',
+    introVideo: 'scene_035_dragdrop_01_intro.mp4',
+    loopVideo: 'scene_035_dragdrop_02_loop_waiting.mp4',
+    correctVideo: 'scene_035_dragdrop_03_feedback_correct.mp4',
+    wrongVideo: 'scene_035_dragdrop_04_feedback_wrong.mp4',
+    successVideo: 'scene_035_dragdrop_05_success.mp4'
   },
   {
     id: 'scene_05',

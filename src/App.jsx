@@ -4,6 +4,7 @@ import ResponsiveVideoCanvas from './components/ResponsiveVideoCanvas';
 import Scene2InteractiveZoo from './components/Scene2InteractiveZoo';
 import Scene3ISpyQuiz from './components/Scene3ISpyQuiz';
 import Scene3MatchingGame from './components/Scene3MatchingGame';
+import Scene35DragDropFeeding from './components/Scene35DragDropFeeding';
 import Scene51on1Practice from './components/Scene51on1Practice';
 import { Sparkles, MapPin, Maximize2, Minimize2, X, Zap, HardDrive, Wifi } from 'lucide-react';
 import './App.css';
@@ -87,7 +88,16 @@ export default function App() {
       '/Audio/meat.mp3',
       '/Audio/bamboo.mp3',
       '/Audio/fruits.mp3',
-      '/images/Coin.png',
+      // Scene 2 Extra Detail Feed Videos
+      '/Videos/scene_02_lion_05_detail_feed.mp4',
+      '/Videos/scene_02_elephant_05_detail_feed.mp4',
+
+      // Scene 3.5 Drag & Drop Zoo Feeding Activity Videos
+      '/Videos/scene_035_dragdrop_01_intro.mp4',
+      '/Videos/scene_035_dragdrop_02_loop_waiting.mp4',
+      '/Videos/scene_035_dragdrop_03_feedback_correct.mp4',
+      '/Videos/scene_035_dragdrop_04_feedback_wrong.mp4',
+      '/Videos/scene_035_dragdrop_05_success.mp4',
 
       // Scene 5 1-on-1 Milo Practice Videos & Audios
       '/Videos/scene_05_milo intro.mp4',
@@ -396,6 +406,14 @@ export default function App() {
             />
           ) : activeScene.type === 'matching' ? (
             <Scene3MatchingGame
+              sceneData={activeScene}
+              onNextScene={handleNextScene}
+              onPrevScene={handlePrevScene}
+              hasPrevScene={currentSceneIdx > 0}
+              hasNextScene={currentSceneIdx < SCENE_CONFIG.length - 1}
+            />
+          ) : activeScene.type === 'dragdrop_feeding' ? (
+            <Scene35DragDropFeeding
               sceneData={activeScene}
               onNextScene={handleNextScene}
               onPrevScene={handlePrevScene}
