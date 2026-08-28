@@ -37,21 +37,21 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
       name: 'Lion', 
       targetFood: 'meat', 
       hotspot: { top: '18%', left: '2%', width: '28vw', height: '28vw' },
-      basketPos: { top: '48%', left: '16%' }
+      basketPos: { top: '52%', left: '26%' }
     },
     { 
       id: 'panda', 
       name: 'Panda', 
       targetFood: 'bamboo', 
       hotspot: { top: '8%', left: '30%', width: '30vw', height: '30vw' },
-      basketPos: { top: '38%', left: '46%' }
+      basketPos: { top: '33%', left: '46.5%' }
     },
     { 
       id: 'elephant', 
       name: 'Elephant', 
       targetFood: 'fruits', 
       hotspot: { top: '16%', left: '60%', width: '28vw', height: '28vw' },
-      basketPos: { top: '48%', left: '76%' }
+      basketPos: { top: '46%', left: '71.5%' }
     }
   ];
 
@@ -177,10 +177,13 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
     processMatch(selectedAnimal, selectedFood);
   }, [selectedAnimal, selectedFood]);
 
+  const lastSpokenAnimalRef = useRef(null);
+
   // DRAG & DROP HANDLERS
   const handleDragStart = (e, foodId) => {
     e.dataTransfer.setData('text/plain', foodId);
     setDraggedFood(foodId);
+    lastSpokenAnimalRef.current = null;
     const foodObj = foods.find(f => f.id === foodId);
     if (foodObj) speakCardName(foodObj.name, foodId);
   };
@@ -189,10 +192,20 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
     e.preventDefault();
   };
 
+  const handleDragEnter = (animalId) => {
+    if (completedMatches.includes(animalId)) return;
+    if (lastSpokenAnimalRef.current !== animalId) {
+      lastSpokenAnimalRef.current = animalId;
+      const animalObj = animals.find(a => a.id === animalId);
+      if (animalObj) speakCardName(animalObj.name, animalId);
+    }
+  };
+
   const handleDrop = (e, animalId) => {
     e.preventDefault();
     const foodId = e.dataTransfer.getData('text/plain') || draggedFood;
     setDraggedFood(null);
+    lastSpokenAnimalRef.current = null;
     if (foodId) {
       processMatch(animalId, foodId);
     }
@@ -330,6 +343,7 @@ export default function Scene35DragDropFeeding({ sceneData, onNextScene, onPrevS
                     height: animal.hotspot.height
                   }}
                   onDragOver={handleDragOver}
+                  onDragEnter={() => handleDragEnter(animal.id)}
                   onDrop={(e) => handleDrop(e, animal.id)}
                   onClick={() => handleAnimalTap(animal.id)}
                 />
