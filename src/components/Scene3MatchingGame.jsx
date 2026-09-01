@@ -73,6 +73,7 @@ export default function Scene3MatchingGame({ sceneData, onNextScene, onPrevScene
   // Safe Video Trigger
   const safePlayVideo = (videoEl, isMuted = false) => {
     if (!videoEl) return;
+    videoEl.playbackRate = 0.8;
     videoEl.muted = isMuted;
     videoEl.play().catch(err => {
       console.warn("Scene 3 video play failed:", err);

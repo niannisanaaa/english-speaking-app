@@ -31,6 +31,7 @@ export default function ResponsiveVideoCanvas({ sceneData, onNextScene, onPrevSc
   // Bulletproof video player trigger with browser gesture fallback strategy
   const safePlayVideo = (videoEl) => {
     if (!videoEl) return;
+    videoEl.playbackRate = 0.8;
     videoEl.muted = isMuted;
     videoEl.play().catch(err => {
       console.warn("Unmuted autoplay restricted by browser, fallback to muted autoplay:", err);

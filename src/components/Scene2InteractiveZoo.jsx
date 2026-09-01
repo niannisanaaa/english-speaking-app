@@ -50,6 +50,7 @@ export default function Scene2InteractiveZoo({ sceneData, onNextScene, onPrevSce
   // Bulletproof video playback with unmuted-to-muted fallback strategy
   const safePlayVideo = (videoEl, isMutedGoal) => {
     if (!videoEl) return;
+    videoEl.playbackRate = 0.8;
     videoEl.muted = isMutedGoal;
     videoEl.play().catch(err => {
       console.warn("Scene 2 unmuted autoplay restricted, fallback to muted:", err);
