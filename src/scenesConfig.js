@@ -5,30 +5,12 @@ export const SCENE_CONFIG = [
     type: 'sequential_videos',
     videos: [
       {
-        id: 'part_1',
-        name: 'scene_01_cutscene_part1.mp4',
-        title: 'Part 1: Going to the Zoo',
-        subtitle: 'Miss Sophie & Milo start their journey!',
-        fallbackTitle: '🎬 Cutscene Part 1: Departure',
+        id: 'song',
+        name: 'scene_01_song.mp4',
+        title: 'Zoo Song Intro',
+        subtitle: 'Welcome to the Zoo Song!',
+        fallbackTitle: '🎶 Scene 1: Zoo Song',
         fallbackBg: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
-      },
-      {
-        id: 'part_2',
-        name: 'scene_01_cutscene_part2.mp4',
-        title: 'Part 2: On the Bus',
-        subtitle: 'Singing songs on the way to the zoo',
-        maxDuration: 4,
-        transitionDuration: 1000,
-        fallbackTitle: '🚌 Cutscene Part 2: Bus Ride',
-        fallbackBg: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)'
-      },
-      {
-        id: 'part_3',
-        name: 'scene_01_cutscene_part3.mp4',
-        title: 'Part 3: Arrival at Zoo Gates',
-        subtitle: 'Ready to see amazing animals!',
-        fallbackTitle: '🦁 Cutscene Part 3: Arrival at Zoo',
-        fallbackBg: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
       }
     ]
   },

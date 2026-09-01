@@ -44,10 +44,8 @@ export default function App() {
       '/images/Panda.png',
       '/images/question.png',
 
-      // Scene 1 Cutscene Videos
-      '/Videos/scene_01_cutscene_part1.mp4',
-      '/Videos/scene_01_cutscene_part2.mp4',
-      '/Videos/scene_01_cutscene_part3.mp4',
+      // Scene 1 Intro Song Video
+      '/Videos/scene_01_song.mp4',
 
       // Scene 2 Interactive Zoo Videos
       '/Videos/scene_02_choice_next_animal.mp4',
