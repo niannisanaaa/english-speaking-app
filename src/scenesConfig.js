@@ -5,12 +5,20 @@ export const SCENE_CONFIG = [
     type: 'sequential_videos',
     videos: [
       {
+        id: 'intro',
+        name: 'Scene_01_Introduction.mp4',
+        title: 'Introduction',
+        subtitle: 'Welcome to the Zoo!',
+        fallbackTitle: '🎬 Scene 1: Introduction',
+        fallbackBg: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
+      },
+      {
         id: 'song',
         name: 'scene_01_song.mp4',
         title: 'Zoo Song Intro',
         subtitle: 'Welcome to the Zoo Song!',
         fallbackTitle: '🎶 Scene 1: Zoo Song',
-        fallbackBg: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
+        fallbackBg: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)'
       }
     ]
   },

@@ -44,7 +44,8 @@ export default function App() {
       '/images/Panda.png',
       '/images/question.png',
 
-      // Scene 1 Intro Song Video
+      // Scene 1 Intro Videos
+      '/Videos/Scene_01_Introduction.mp4',
       '/Videos/scene_01_song.mp4',
 
       // Scene 2 Interactive Zoo Videos
