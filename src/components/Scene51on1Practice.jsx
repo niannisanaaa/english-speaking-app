@@ -72,7 +72,7 @@ export default function Scene51on1Practice({ sceneData, onNextScene, onPrevScene
   // Safe Video Player Trigger
   const safePlayVideo = (videoEl) => {
     if (!videoEl) return;
-    videoEl.playbackRate = 0.8;
+    videoEl.playbackRate = 0.9;
     videoEl.muted = true;
     videoEl.play().catch(err => console.warn("Scene 5 video play failed:", err));
   };

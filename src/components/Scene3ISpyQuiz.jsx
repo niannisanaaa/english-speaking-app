@@ -91,7 +91,7 @@ export default function Scene3ISpyQuiz({ sceneData, onNextScene, onPrevScene, ha
   // Bulletproof video player trigger with browser gesture fallback strategy
   const safePlayVideo = (videoEl, isMutedGoal) => {
     if (!videoEl) return;
-    videoEl.playbackRate = 0.8;
+    videoEl.playbackRate = 0.9;
     videoEl.muted = isMutedGoal;
     videoEl.play().catch(err => {
       console.warn("Scene 3 unmuted autoplay restricted, fallback to muted autoplay:", err);
